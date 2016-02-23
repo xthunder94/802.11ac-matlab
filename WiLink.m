@@ -184,7 +184,7 @@ parfor n=1:env_c
   hVitDec = htVitDec.clone;
   elseif (strcmp(type,'LDPC'))
   hDeMod = htDeMod.clone;
-  hDeMod.Variance =  1/10^(hChan.SNR/10));
+  hDeMod.Variance =  1/10^(hChan.SNR/10);
   end
   for i = 1:numIter
     % Generate binary frames of size specified by the frameLength variable
@@ -206,7 +206,7 @@ parfor n=1:env_c
     modData = step(hMod, encData);
     
     % Pass the modulated signal through an AWGN channel
-    if (strcmp(modType,'PSK'))
+    if (strcmp(modType,'PSK') || ((strcmp(type,'LDPC'))&& (debug ~= 0)))
 	channelOutput = step(hChan, modData);
     elseif (strcmp(modType,'QAM'))
     	channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
