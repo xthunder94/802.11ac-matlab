@@ -179,13 +179,13 @@ parfor n=1:env_c
   
   hErrorCalc = htErrorCalc.clone;
   if (debug == 0)
-  hDeMod = htDeMod;
+  hDeMod = clone(htDeMod);
   elseif (strcmp(type,'BCC'))
-  hDeMod = htDeMod;
+  hDeMod = clone(htDeMod);
   hConvEnc = clone(htConvEnc);
   hVitDec = clone(htVitDec);
   elseif (strcmp(type,'LDPC'))
-  hDeMod = htDeMod.clone;
+  hDeMod = clone(htDeMod);
   hDeMod.Variance =  1/10^(hChan.SNR/10);
   end
   for i = 1:numIter
