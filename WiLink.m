@@ -33,26 +33,24 @@ switch MCS
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.BPSKModulator;
         hDeMod = comm.BPSKDemodulator;
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
+        
     case 1 
         disp('QPSK Rate 1/2')
         modType = 'PSK';
         R = 1/2; % The Encoding Rate
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
-        hMod = comm.QPSKModulator;
-        hDeMod = comm.QPSKDemodulator;
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
+        hMod = comm.QPSKModulator('BitInput', true);
+        hDeMod = comm.QPSKDemodulator('BitOutput', true);
     case 2
         disp('QPSK Rate 3/4')
         modType = 'PSK';
         R = 3/4; % The Encoding Rate
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
-        hMod = comm.QPSKModulator;
-        hDeMod = comm.QPSKDemodulator;
+        hMod = comm.QPSKModulator('BitInput', true);
+        hDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 3 
         disp('16-QAM Rate 1/2')
         modType = 'QAM';
@@ -61,7 +59,6 @@ switch MCS
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 4 
         disp('16-QAM Rate 3/4')
         modType = 'QAM';
@@ -71,7 +68,6 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 5
         disp('64-QAM Rate 2/3')
         modType = 'QAM';
@@ -81,7 +77,6 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 6
         disp('64-QAM Rate 3/4')
         modType = 'QAM';
@@ -91,7 +86,6 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 7
         disp('64-QAM Rate 5/6')
         modType = 'QAM';
@@ -101,7 +95,6 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 8
         disp('256-QAM Rate 3/4')
         modType = 'QAM';
@@ -111,7 +104,6 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     case 9
         disp('256-QAM Rate 5/6')
         modType = 'QAM';
@@ -121,7 +113,6 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
     otherwise 
         warning('Unexpected MCS.')
 end
@@ -255,6 +246,7 @@ ber = BERVec(1,:)
 
 % Compute the theoretical BER for this scenario
 figure
+berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
 semilogy(SNR_Vec,berHypo,'r')
 hold on
 semilogy(SNR_Vec,BERVec(1,:));
