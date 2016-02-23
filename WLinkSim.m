@@ -57,6 +57,11 @@ numIter = 1e1; %1e6
     modType, k, M, hMod, hDemod, ...
     htConvEnc, htVitDec, htErrorCalc, ...
     N_Pre_Pad, N_Data_Bits, N_Post_Pad)
+    
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%        GRAPHS         %
+%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Graph theoretical and actual BERs
 figure
