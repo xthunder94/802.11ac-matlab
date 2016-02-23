@@ -1,5 +1,5 @@
 function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
-    modType, k, M, hMod, hDemod, ...
+    modType, k, M, hMod, htDemod, ...
     htConvEnc, htVitDec, htErrorCalc, ...
     N_Pre_Pad, N_Data_Bits, N_Post_Pad)
 
@@ -19,12 +19,29 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
         %reset(hErrorCalc)
         %reset(hConvEnc)
         %reset(hVitDec)
+        
+        hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
+    
+        hErrorCalc = htErrorCalc.clone;
+        if (debug == 0)
+            hDemod = htDemod;
+        elseif (strcmp(encType,'BCC'))
+            hDemod = htDemod;
+            hConvEnc = clone(htConvEnc);
+            hVitDec = clone(htVitDec);
+        elseif (strcmp(encType,'LDPC'))
+            hDemod = htDemod.clone;
+            hDemod.Variance =  1/10^(hChan.SNR/10);
+        end
+    
+        %{
         hErrorCalc = htErrorCalc.clone;
         if(~strcmp(encType, 'LDPC'))
             hConvEnc = htConvEnc.clone;
             hVitDec = htVitDec.clone;
         end
         hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
+        %}
         
         for i = 1:numIter
             
@@ -47,16 +64,18 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
             modData = step(hMod, encData);
             
             % Pass the modulated signal through an AWGN channel
-            if (strcmp(modType, 'PSK'))
+            if (strcmp(modType,'PSK'))
                 channelOutput = step(hChan, modData);
-            elseif (strcmp(modType, 'QAM'))
+            elseif (strcmp(encType,'LDPC') && debug)
+                channelOutput = step(hChan, modData);
+            elseif (strcmp(modType,'QAM'))
                 channelOutput = awgn(modData, SNR_Vec(n), 'measured');
             end
             % Add AWGN, this accounts for 10*log10(R) modification and additional
             % power due to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
             
             % Demodulate the signal
-            rxsyms = step(hDemod, channelOutput);
+            rxsyms = step(htDemod, channelOutput);
             
             % Pass the demodulated channel outputs as input to the decoder
             if (debug == 0)
@@ -87,3 +106,4 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     berHypo = berawgn(SNR_Vec - 10*log10(k), modType, M, 'nondiff');
     
 end
+    
