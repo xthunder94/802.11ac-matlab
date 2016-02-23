@@ -119,7 +119,3 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             
     end
 end
-
-
-
-
