@@ -14,7 +14,7 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Specify SNR range in dB
-SNR_Vec = 0:1:10;
+SNR_Vec = 0:5:30;
 
 % Specify modulation and coding scheme (ranges from 0-9)
 MCS = 9;
@@ -32,7 +32,7 @@ MCS = 9;
 %}
 
 % Specify encoding method (BCC or LDPC)
-encType = 'LDPC';
+encType = 'BCC';
 
 % Specify debug mode(0 if running without encoding, else -1)
 debug = -1;
@@ -46,28 +46,28 @@ numIter = 1e1; %1e6
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set modulation and coding scheme
-[modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS);
+[modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS);
 
 % Set encoding method (BCC or LDPC, debug or no debug)
 [htConvEnc, htVitDec, htErrorCalc, ...
-    N_Punc_Pad, N_Pre_Pad, N_Data_Bits, N_Post_Pad] = SetEncoder(encType, debug, k, puncpat);
+    N_Pre_Pad, N_Data_Bits, N_Post_Pad] = SetEncoder(encType, debug, k, R, puncpat);
 
 % Run simulation and retrieve BERs
 [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
-    modType, k, M, hMod, hDemod, ...
+    modType, k, M, hMod, htDemod, ...
     htConvEnc, htVitDec, htErrorCalc, ...
     N_Pre_Pad, N_Data_Bits, N_Post_Pad)
-    
-    
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %        GRAPHS         %
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Graph theoretical and actual BERs
 figure
-semilogy(SNR_Vec,berHypo,'r')
+semilogy(SNR_Vec, berHypo, 'r')
 hold on
-semilogy(SNR_Vec,ber);
+semilogy(SNR_Vec, ber);
 hold off
 xlabel('SNR (dB)')
 legend('Theoretical BER', 'BER');
