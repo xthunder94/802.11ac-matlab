@@ -110,7 +110,7 @@ switch MCS
 end
 
 if (debug == 0)
-	N_Pre_Pad = 0;
+    N_Pre_Pad = 0;
     N_Data_Bits = 1e4;
     N_Post_Pad = 0;
     N_Data_Bits = N_Data_Bits + k - mod(N_Data_Bits,k);
@@ -202,7 +202,7 @@ for n=1:env_c
     if (strcmp(modType,'PSK'))
 	channelOutput = step(hChan, modData);
     elseif (strcmp(modType,'QAM'))
-    channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
+    	channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
     end
     % Add AWGN, this accounts for 10*log10(R) modification and additional
     % power due to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
