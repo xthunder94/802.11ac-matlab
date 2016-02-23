@@ -7,10 +7,10 @@ warning('off','MATLAB:xlswrite:AddSheet');
 warning('off','MATLAB:xlswrite:NoCOMServer');
 
 %% Inputs
-MCS = 2; % 0:9;
+MCS = 8 % 0:9;
 type = 'BCC'; % ['BCC' 'LDPC'];
 numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
-SNR_Vec = 0:1:10; % in dB
+SNR_Vec = 0:5:30; % in dB
 debug = 0; % If 0, running without encoding
 
 %% Choosing which Modulation and Coding Scheme 
@@ -139,17 +139,13 @@ elseif (strcmp(type,'BCC'))
     N_Reserved_Service_Bits = 9;
     N_Tail_bits = 6;
     N_SYM = ceil((N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
-        8*length_param+N_Tail_bits)/N_DBPS); % 18.3.5.4
-    N_DATA = N_SYM * N_DBPS;
+        8*length_param + N_Tail_bits)/lcm(N_DBPS,length(puncpat))); % 18.3.5.4
+    N_DATA = N_SYM * lcm(N_DBPS,length(puncpat));
     N_PAD = N_DATA - (N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
         8 * length_param + N_Tail_bits);
-    N_Punc_Pad = mod(length(puncpat) - N_PAD - mod(N_DATA,length(puncpat)), ...
-        length(puncpat)); % Padding for computation
-    N_Punc_Pad = N_Punc_Pad + mod(N_DATA + N_Punc_Pad + N_PAD + N_Tail_bits, lcm(k,length(puncpat)));
-    
     N_Pre_Pad = N_Scrambler_Init_Bits+N_Reserved_Service_Bits;
-    N_Data_Bits = N_DATA-N_Scrambler_Init_Bits-N_Reserved_Service_Bits;
-    N_Post_Pad = N_Tail_bits+N_PAD+N_Punc_Pad;
+    N_Post_Pad = N_Tail_bits+N_PAD;
+    N_Data_Bits = N_DATA-N_Pre_Pad-N_Post_Pad;
 elseif (strcmp(type,'LDPC'))
     % LDPC matrix initialization
     LDPC(0, false, true, 1/2);
@@ -177,7 +173,8 @@ for n=1:env_c
   %reset(hConvEnc)
   %reset(hVitDec)
   hErrorCalc = htErrorCalc.clone;
-  if (strcmp(type,'LDPC'))
+  if (debug == 0)
+  elseif (strcmp(type,'BCC'))
   hConvEnc = htConvEnc.clone;
   hVitDec = htVitDec.clone;
   end
