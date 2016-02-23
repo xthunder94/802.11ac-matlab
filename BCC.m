@@ -38,5 +38,3 @@ function [htConvEnc, htVitDec, htErrorCalc, ...
     N_Post_Pad = N_Tail_bits + N_PAD + N_Punc_Pad;
     
 end
-
-    
