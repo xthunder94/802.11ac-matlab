@@ -1,4 +1,4 @@
-function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
+function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
 
     % Reference Materials
     %{
@@ -22,7 +22,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 1/2;
             puncpat = -1;
             hMod = comm.BPSKModulator;
-            hDemod = comm.BPSKDemodulator;
+            htDemod = comm.BPSKDemodulator;
             
         case 1
             disp('QPSK Rate 1/2')
@@ -32,7 +32,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 1/2;
             puncpat = -1;
             hMod = comm.QPSKModulator('BitInput', true);
-            hDemod = comm.QPSKDemodulator('BitOutput', true);
+            htDemod = comm.QPSKDemodulator('BitOutput', true);
   
         case 2
             disp('QPSK Rate 3/4')
@@ -42,7 +42,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 3/4;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.QPSKModulator('BitInput', true);
-            hDemod = comm.QPSKDemodulator('BitOutput', true);
+            htDemod = comm.QPSKDemodulator('BitOutput', true);
             
         case 3 
             disp('16-QAM Rate 1/2')
@@ -51,8 +51,8 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             k = log2(M);
             R = 1/2;
             puncpat = -1;
-            hMod = comm.RectangularQAMModulator('ModulationOrder',M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 4 
             disp('16-QAM Rate 3/4')
@@ -62,7 +62,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 3/4;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 5
             disp('64-QAM Rate 2/3')
@@ -72,7 +72,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 2/3;
             puncpat = [1; 1; 1; 0;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 6
             disp('64-QAM Rate 3/4')
@@ -82,7 +82,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 3/4;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
 
         case 7
             disp('64-QAM Rate 5/6')
@@ -92,7 +92,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 5/6;
             puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 8
             disp('256-QAM Rate 3/4')
@@ -102,7 +102,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 3/4;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 9
             disp('256-QAM Rate 5/6')
@@ -112,7 +112,7 @@ function [modType, M, k, R, puncpat hMod, hDemod] = SetMCS(MCS)
             R = 5/6;
             puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
-            hDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
+            htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
 
         otherwise 
             warning('Unexpected MCS.')
