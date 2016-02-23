@@ -22,7 +22,7 @@ switch MCS
         msgM = 2; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.BPSKModulator;
-        hDeMod = comm.BPSKDemodulator;
+        htDeMod = comm.BPSKDemodulator;
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
     case 1 
         disp('QPSK Rate 1/2')
@@ -31,7 +31,7 @@ switch MCS
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.QPSKModulator('BitInput', true);
-        hDeMod = comm.QPSKDemodulator('BitOutput', true);
+        htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
     case 2
         disp('QPSK Rate 3/4')
@@ -40,7 +40,7 @@ switch MCS
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.QPSKModulator('BitInput', true);
-        hDeMod = comm.QPSKDemodulator('BitOutput', true);
+        htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 3 
         disp('16-QAM Rate 1/2')
@@ -49,7 +49,7 @@ switch MCS
         msgM = 16; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
     case 4 
         disp('16-QAM Rate 3/4')
@@ -58,7 +58,7 @@ switch MCS
         msgM = 16; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 5
         disp('64-QAM Rate 2/3')
@@ -67,7 +67,7 @@ switch MCS
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
     case 6
         disp('64-QAM Rate 3/4')
@@ -76,7 +76,7 @@ switch MCS
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 7
         disp('64-QAM Rate 5/6')
@@ -85,7 +85,7 @@ switch MCS
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
     case 8
         disp('256-QAM Rate 3/4')
@@ -94,7 +94,7 @@ switch MCS
         msgM = 256; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 9
         disp('256-QAM Rate 5/6')
@@ -103,7 +103,7 @@ switch MCS
         msgM = 256; % The M-ary number, 2 corresponds to binary modulation
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
     otherwise 
         warning('Unexpected MCS.')
@@ -168,17 +168,24 @@ tic;
 % Run the simulation numIter amount of times
 % Note that using a parallel pool will not output graphs. 
 % Graphs will be generated and can be saved using print
-for n=1:env_c
+parfor n=1:env_c
   %reset(hErrorCalc)
   %reset(hConvEnc)
   %reset(hVitDec)
+  
+  hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
+  
   hErrorCalc = htErrorCalc.clone;
   if (debug == 0)
+  hDeMod = htDeMod;
   elseif (strcmp(type,'BCC'))
+  hDeMod = htDeMod;
   hConvEnc = htConvEnc.clone;
   hVitDec = htVitDec.clone;
+  elseif 
+  hDeMod = htDeMod.clone;
+  hDeMod.Variance =  1/10^(hChan.SNR/10));
   end
-  hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
   for i = 1:numIter
     % Generate binary frames of size specified by the frameLength variable
     bits = [zeros(N_Pre_Pad,1);logical(randi([0 1], N_Data_Bits,1));zeros(N_Post_Pad,1)];
