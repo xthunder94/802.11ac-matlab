@@ -6,24 +6,14 @@ clear all;close all;clc;format compact;
 warning('off','MATLAB:xlswrite:AddSheet');
 warning('off','MATLAB:xlswrite:NoCOMServer');
 
-% Reference Materials
-MCS = 0:9;
-type = ['BCC' 'LDPC'];
-msgM = [2 4 16 64 256]; 
-k = log2(msgM);   % # of information bits per symbol
-puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
-puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
-puncpat = -1; % Rate 1/2 Default Rate; No puncture 
-
-% Inputs
-MCS = 2;
-type = 'BCC';
-numIter = 1e2 %1e6;
+%% Inputs
+MCS = 2; % 0:9;
+type = 'BCC'; % ['BCC' 'LDPC'];
+numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
 SNR_Vec = 0:1:10; % in dB
 debug = 0; % If 0, running without encoding
 
-% Choosing which Modulation and Coding Scheme 
+%% Choosing which Modulation and Coding Scheme 
 switch MCS
     case 0 
         disp('BPSK Rate 1/2')
@@ -33,7 +23,7 @@ switch MCS
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.BPSKModulator;
         hDeMod = comm.BPSKDemodulator;
-        
+        puncpat = -1; % Rate 1/2 Default Rate; No puncture 
     case 1 
         disp('QPSK Rate 1/2')
         modType = 'PSK';
@@ -42,6 +32,7 @@ switch MCS
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.QPSKModulator('BitInput', true);
         hDeMod = comm.QPSKDemodulator('BitOutput', true);
+        puncpat = -1; % Rate 1/2 Default Rate; No puncture 
     case 2
         disp('QPSK Rate 3/4')
         modType = 'PSK';
@@ -59,6 +50,7 @@ switch MCS
         k = log2(msgM);   % # of information bits per symbol
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = -1; % Rate 1/2 Default Rate; No puncture 
     case 4 
         disp('16-QAM Rate 3/4')
         modType = 'QAM';
@@ -169,7 +161,7 @@ elseif (strcmp(type,'LDPC'))
     N_Post_Pad = 0;
 end
 
-% Create a vector to store the BER computed during each iteration
+%% Create a vector to store the BER computed during each iteration
 BERVec = zeros(3,length(SNR_Vec)); % Allocate memory to store results
 env_c = length(SNR_Vec);
 
@@ -244,7 +236,7 @@ toc;
 
 ber = BERVec(1,:)
 
-% Compute the theoretical BER for this scenario
+%% Compute the theoretical BER for this scenario
 figure
 berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
 semilogy(SNR_Vec,berHypo,'r')
