@@ -182,7 +182,7 @@ parfor n=1:env_c
   hDeMod = htDeMod;
   hConvEnc = htConvEnc.clone;
   hVitDec = htVitDec.clone;
-  elseif 
+  elseif (strcmp(type,'LDPC'))
   hDeMod = htDeMod.clone;
   hDeMod.Variance =  1/10^(hChan.SNR/10));
   end
