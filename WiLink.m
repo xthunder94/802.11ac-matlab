@@ -6,14 +6,9 @@ clear all;close all;clc;format compact;
 warning('off','MATLAB:xlswrite:AddSheet');
 warning('off','MATLAB:xlswrite:NoCOMServer');
 
-% Inputs
-MCS = 0;
-type = 'BCC';
-numIter = 1e2 %1e6;
-SNR_Vec = 0:1:10; % in dB
-debug = -1; % If 0, running without encoding
-
 % Reference Materials
+MCS = 0:9;
+type = ['BCC'; 'LDPC'];
 % The M-ary number, 2 corresponds to binary modulation
 msgM = [2 4 16 64 256]; 
 k = log2(msgM);   % # of information bits per symbol
@@ -22,12 +17,14 @@ puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
 puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
 puncpat = -1; % Rate 1/2 Default Rate; No puncture 
 
+% Inputs
+MCS = 0;
+type = 'BCC';
+numIter = 1e2 %1e6;
+SNR_Vec = 0:1:10; % in dB
+debug = -1; % If 0, running without encoding
+
 % Choosing which Modulation and Coding Scheme 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: Functionalize this shit. Add LDPC switch cases
-% if (strcomp(type,'LDPC'))
-% else if (strcomp(type'BCC')) 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch MCS
     case 0 
         disp('BPSK Rate 1/2')
@@ -120,42 +117,58 @@ switch MCS
         warning('Unexpected MCS.')
 end
 
-% Math Setup for # of bits
-length_param = 4095;  % 4095 is the max LENGTH parameter. See 18.2.2.2
-N_DBPS = k;
-N_Scrambler_Init_Bits = 7;
-N_Reserved_Service_Bits = 9;
-N_Tail_bits = 6;
-N_SYM = ceil((N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
-    8*length_param+N_Tail_bits)/N_DBPS); % 18.3.5.4
-N_DATA = N_SYM * N_DBPS;
-N_PAD = N_DATA - (N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
-    8 * length_param + N_Tail_bits);
-N_Punc_Pad = mod(length(puncpat) - N_PAD - mod(N_DATA,length(puncpat)), ...
-    length(puncpat)); % Padding for computation
-N_Punc_Pad = N_Punc_Pad + mod(N_DATA + N_Punc_Pad + N_PAD + N_Tail_bits, lcm(k,length(puncpat)));
+if (debug == 0)
+	N_Pre_Pad = 0;
+    N_Data_Bits = 1e4;
+    N_Post_Pad = 0;
+elseif (strcmp(type,'BCC'))
+    % Convolutional Encoding Setup
+    constlen=7;
+    codegen = [171 133]; 
+    trellis = poly2trellis(constlen, codegen); % Industry standard 18.3.5.6
+    htConvEnc = comm.ConvolutionalEncoder(trellis); 
+    htVitDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard'); 
+    htVitDec.TracebackDepth = 96;
+    if (debug ~= 0)
+    htErrorCalc = comm.ErrorRate('ReceiveDelay', htVitDec.TracebackDepth);
+    else
+    htErrorCalc = comm.ErrorRate; % for debug no encoding
+    end
 
-% Convolutional Encoding Setup
-constlen=7;
-codegen = [171 133]; 
-trellis = poly2trellis(constlen, codegen); % Industry standard 18.3.5.6
-htConvEnc = comm.ConvolutionalEncoder(trellis); 
-htVitDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard'); 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-htVitDec.TracebackDepth = 96; % TODO: find reciever TBD
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if (debug ~= 0)
-htErrorCalc = comm.ErrorRate('ReceiveDelay', htVitDec.TracebackDepth);
-else
-htErrorCalc = comm.ErrorRate; % for debug no encoding
-end
-
-
-if (puncpat ~= -1) 
-    htConvEnc.PuncturePatternSource = 'Property';
-    htVitDec.PuncturePatternSource = 'Property';
-    htConvEnc.PuncturePattern = puncpat;
-    htVitDec.PuncturePattern = puncpat;
+    if (puncpat ~= -1) 
+        htConvEnc.PuncturePatternSource = 'Property';
+        htVitDec.PuncturePatternSource = 'Property';
+        htConvEnc.PuncturePattern = puncpat;
+        htVitDec.PuncturePattern = puncpat;
+    end
+    
+    % Math Setup for # of bits
+    length_param = 4095;  % 4095 is the max LENGTH parameter. See 18.2.2.2
+    N_DBPS = k;
+    N_Scrambler_Init_Bits = 7;
+    N_Reserved_Service_Bits = 9;
+    N_Tail_bits = 6;
+    N_SYM = ceil((N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
+        8*length_param+N_Tail_bits)/N_DBPS); % 18.3.5.4
+    N_DATA = N_SYM * N_DBPS;
+    N_PAD = N_DATA - (N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
+        8 * length_param + N_Tail_bits);
+    N_Punc_Pad = mod(length(puncpat) - N_PAD - mod(N_DATA,length(puncpat)), ...
+        length(puncpat)); % Padding for computation
+    N_Punc_Pad = N_Punc_Pad + mod(N_DATA + N_Punc_Pad + N_PAD + N_Tail_bits, lcm(k,length(puncpat)));
+    
+    N_Pre_Pad = N_Scrambler_Init_Bits+N_Reserved_Service_Bits;
+    N_Data_Bits = frameLength-N_Scrambler_Init_Bits-N_Reserved_Service_Bits;
+    N_Post_Pad = N_Tail_bits+N_PAD+N_Punc_Pad;
+elseif (strcmp(type,'LDPC'))
+    % LDPC matrix initialization
+    LDPC(0, false, true, 1/2);
+    htErrorCalc = comm.ErrorRate;
+    
+    code_block = 324; % Our LDPC matricies are defined for 324 fixed input
+    N_Pre_Pad = 0;
+    N_Data_Bits = code_block;
+    N_Post_Pad = 0;
 end
 
 % Create a vector to store the BER computed during each iteration
@@ -180,18 +193,18 @@ for n=1:env_c
   %hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
   for i = 1:numIter
     % Generate binary frames of size specified by the frameLength variable
-    bits = [zeros(N_Scrambler_Init_Bits+N_Reserved_Service_Bits,1); ...
-        randi([0 1], frameLength-N_Scrambler_Init_Bits-N_Reserved_Service_Bits, 1); ...
-        zeros(N_Tail_bits+N_PAD+N_Punc_Pad,1)];
+    bits = [zeros(N_Pre_Pad,1);logical([0 1], N_Data_Bits, 1);zeros(N_Post_Pad,1)];
 
     % Interleave the bits   % Not interleaving because parity bit math mess
     txdata = bits; %randintrlv(bits,sum(double('Keenesus'))); 
 
-    % Convolutionally encode the data
-    if (debug ~= 0)
-    encData = step(hConvEnc, txdata);
-    else
-    encData = txdata; % for debug no encoding
+    % Encode the data
+    if (debug == 0)
+        encData = txdata; % for debug no encoding
+    elseif (strcmp(type,'BCC'))
+        encData = step(hConvEnc, txdata); % Conv Enc
+    elseif (strcmp(type,'LDPC'))
+        LDPC(txdata, true, false, 0); % LDPC Enc
     end
     
     % Modulate the encoded data
@@ -206,11 +219,13 @@ for n=1:env_c
     % Demodulate the signal 
     rxsyms = step(hDeMod, channelOutput);
 
-    % Pass the demodulated channel outputs as input to the Viterbi decoder
-    if (debug ~= 0)
-    decData = step(hVitDec, rxsyms);
-    else
-    decData = rxsyms; % for debug no encoding
+    % Pass the demodulated channel outputs as input to the decoder
+    if (debug == 0)
+        decData = rxsyms; % for debug no encoding
+    elseif (strcmp(type,'BCC'))
+        decData = step(hVitDec, rxsyms); % Viterbi dec
+    elseif (strcmp(type,'LDPC'))
+        LDPC(rxsyms, false, false, 0); % LDPC dec
     end
     
     % Deinterleave the bits % Not interleaving because parity bit math mess
@@ -227,11 +242,7 @@ toc;
 
 ber = BERVec(1,:)
 
-
-
 % Compute the theoretical BER for this scenario
-%berHypo = berawgn(SNR_Vec, 'qam', msgM, 'nondiff');
-%berHypo = berawgn(SNR_Vec, 'psk', msgM, 'nondiff');
 figure
 berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
 semilogy(SNR_Vec,berHypo,'r')
