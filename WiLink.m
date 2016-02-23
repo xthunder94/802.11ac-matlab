@@ -7,10 +7,11 @@ warning('off','MATLAB:xlswrite:AddSheet');
 warning('off','MATLAB:xlswrite:NoCOMServer');
 
 % Inputs
-MCS = 3;
+MCS = 0;
 type = 'BCC';
-numIter = 1e3 %1e6;
+numIter = 1e2 %1e6;
 SNR_Vec = 0:1:10; % in dB
+debug = -1; % If 0, running without encoding
 
 % Reference Materials
 % The M-ary number, 2 corresponds to binary modulation
@@ -30,90 +31,90 @@ puncpat = -1; % Rate 1/2 Default Rate; No puncture
 switch MCS
     case 0 
         disp('BPSK Rate 1/2')
+        modType = 'PSK';
         R = 1/2;
         msgM = 2;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'psk', msgM, 'nondiff');
         hMod = comm.BPSKModulator;
         hDeMod = comm.BPSKDemodulator;
     case 1 
         disp('QPSK Rate 1/2')
+        modType = 'PSK';
         R = 1/2;
         msgM = 4;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'psk', msgM, 'nondiff'); 
         hMod = comm.QPSKModulator;
         hDeMod = comm.QPSKDemodulator;
     case 2
         disp('QPSK Rate 3/4')
+        modType = 'PSK';
         R = 3/4;
         msgM = 4;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'psk', msgM, 'nondiff');
         hMod = comm.QPSKModulator;
         hDeMod = comm.QPSKDemodulator;
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 3 
         disp('16-QAM Rate 1/2')
+        modType = 'QAM';
         R = 1/2;
         msgM = 16;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec + 0*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
     case 4 
         disp('16-QAM Rate 3/4')
+        modType = 'QAM';
         R = 3/4;
         msgM = 16;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 5
         disp('64-QAM Rate 2/3')
+        modType = 'QAM';
         R = 2/3;
         msgM = 64;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
     case 6
         disp('64-QAM Rate 3/4')
+        modType = 'QAM';
         R = 3/4;
         msgM = 64;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 7
         disp('64-QAM Rate 5/6')
+        modType = 'QAM';
         R = 5/6;
         msgM = 64;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
     case 8
         disp('256-QAM Rate 3/4')
+        modType = 'QAM';
         R = 3/4;
         msgM = 256;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
     case 9
         disp('256-QAM Rate 5/6')
+        modType = 'QAM';
         R = 5/6;
         msgM = 256;
         k = log2(msgM);   % # of information bits per symbol
-        berHypo = berawgn(SNR_Vec - 10*log10(k), 'qam', msgM, 'nondiff');
-        hMod = comm.RectangularQAMModulator(msgM); % See 22.3.10.9
-        hDeMod = comm.RectangularQAMDemodulator(msgM);
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        hDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
     otherwise 
         warning('Unexpected MCS.')
@@ -143,8 +144,12 @@ htVitDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 htVitDec.TracebackDepth = 96; % TODO: find reciever TBD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if (debug ~= 0)
 htErrorCalc = comm.ErrorRate('ReceiveDelay', htVitDec.TracebackDepth);
+else
 htErrorCalc = comm.ErrorRate; % for debug no encoding
+end
+
 
 if (puncpat ~= -1) 
     htConvEnc.PuncturePatternSource = 'Property';
@@ -172,38 +177,45 @@ for n=1:env_c
   hErrorCalc = htErrorCalc.clone;
   hConvEnc = htConvEnc.clone;
   hVitDec = htVitDec.clone;
-  hChan = comm.AWGNChannel('NoiseMethod', 'Signal to noise ratio (Eb/No)',...
-  'SignalPower', 1, 'SamplesPerSymbol', 1, 'BitsPerSymbol', k);
-  hChan.EbNo = SNR_Vec(n); % Set the channel EbNo value for simulation
-  %{
-  hChan = comm.AWGNChannel(...
-            'NoiseMethod','Signal to noise ratio (SNR)','SNR', ...
-            SNR_Vec(n) - 10*log10(k/msgM) - 10*log10(k));% + 10*log10(R));
-  % http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
-  %}
+  %hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
   for i = 1:numIter
     % Generate binary frames of size specified by the frameLength variable
     bits = [zeros(N_Scrambler_Init_Bits+N_Reserved_Service_Bits,1); ...
         randi([0 1], frameLength-N_Scrambler_Init_Bits-N_Reserved_Service_Bits, 1); ...
         zeros(N_Tail_bits+N_PAD+N_Punc_Pad,1)];
+
     % Interleave the bits   % Not interleaving because parity bit math mess
     txdata = bits; %randintrlv(bits,sum(double('Keenesus'))); 
+
     % Convolutionally encode the data
-    encData = txdata;%step(hConvEnc, txdata);
-    % Convert bits to symbols
-    txsyms = bi2de(reshape(encData,k,numel(encData)/k).','left-msb');
+    if (debug ~= 0)
+    encData = step(hConvEnc, txdata);
+    else
+    encData = txdata; % for debug no encoding
+    end
+    
     % Modulate the encoded data
-    modData = qammod(txsyms,msgM,0,'gray');%step(hMod, txsyms);
+    modData = step(hMod, encData);
+    
     % Pass the modulated signal through an AWGN channel
-    channelOutput = step(hChan, modData);
+    %channelOutput = step(hChan, modData); % how calc the power? lol
+    channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
+    % Add AWGN, this accounts for 10*log10(R) modification and additional
+    % power due to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
+    
     % Demodulate the signal 
-    rxsyms = qamdemod(channelOutput,msgM,0,'gray');%step(hDeMod, channelOutput);
-    % Convert symbols to bits
-    rxbits = de2bi(rxsyms,k,'left-msb').'; % Map Symbols to Bits
+    rxsyms = step(hDeMod, channelOutput);
+
     % Pass the demodulated channel outputs as input to the Viterbi decoder
-    decData = rxbits(:);%step(hVitDec, rxbits(:));
+    if (debug ~= 0)
+    decData = step(hVitDec, rxsyms);
+    else
+    decData = rxsyms; % for debug no encoding
+    end
+    
     % Deinterleave the bits % Not interleaving because parity bit math mess
     data = decData; %randdeintrlv(decData,sum(double('Keenesus')));
+
     % Compute and accumulate errors
     BERVec(:,n) = step(hErrorCalc, bits, data);
   end
@@ -221,12 +233,14 @@ ber = BERVec(1,:)
 %berHypo = berawgn(SNR_Vec, 'qam', msgM, 'nondiff');
 %berHypo = berawgn(SNR_Vec, 'psk', msgM, 'nondiff');
 figure
+berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
 semilogy(SNR_Vec,berHypo,'r')
 hold on
 semilogy(SNR_Vec,BERVec(1,:));
 hold off
+xlabel('SNR (dB)')
 legend('Theoretical BER', 'BER');
-title(strcat(num2str(msgM), ' QAM'));
+title(strcat(num2str(msgM), ' ', modType));
 
 %{
 filename = sprintf('snr%d_ber%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
