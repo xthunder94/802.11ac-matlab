@@ -27,5 +27,4 @@ function [htConvEnc, htVitDec, htErrorCalc, ...
         N_Post_Pad = 0;
 
     end
-
 end
