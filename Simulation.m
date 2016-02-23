@@ -87,5 +87,3 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     berHypo = berawgn(SNR_Vec - 10*log10(k), modType, M, 'nondiff');
     
 end
-
-    
