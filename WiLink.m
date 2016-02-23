@@ -5,13 +5,14 @@ clear all;close all;clc;format compact;
 % warnings that occur when running remotely
 warning('off','MATLAB:xlswrite:AddSheet');
 warning('off','MATLAB:xlswrite:NoCOMServer');
+warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 8 % 0:9;
+MCS = 6 % 0:9;
 type = 'BCC'; % ['BCC' 'LDPC'];
 numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
 SNR_Vec = 0:5:30; % in dB
-debug = 0; % If 0, running without encoding
+debug = 1; % If 0, running without encoding
 
 %% Choosing which Modulation and Coding Scheme 
 switch MCS
@@ -134,12 +135,13 @@ elseif (strcmp(type,'BCC'))
     
     % Math Setup for # of bits
     length_param = 4095;  % 4095 is the max LENGTH parameter. See 18.2.2.2
+    [numerator,denominator] = rat(R);
     N_DBPS = k;
     N_Scrambler_Init_Bits = 7;
     N_Reserved_Service_Bits = 9;
     N_Tail_bits = 6;
     N_SYM = ceil((N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
-        8*length_param + N_Tail_bits)/lcm(N_DBPS,length(puncpat))); % 18.3.5.4
+        8*length_param + N_Tail_bits)/lcm(N_DBPS,length(puncpat)))*numerator; % 18.3.5.4
     N_DATA = N_SYM * lcm(N_DBPS,length(puncpat));
     N_PAD = N_DATA - (N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
         8 * length_param + N_Tail_bits);
@@ -180,8 +182,8 @@ parfor n=1:env_c
   hDeMod = htDeMod;
   elseif (strcmp(type,'BCC'))
   hDeMod = htDeMod;
-  hConvEnc = htConvEnc.clone;
-  hVitDec = htVitDec.clone;
+  hConvEnc = clone(htConvEnc);
+  hVitDec = clone(htVitDec);
   elseif (strcmp(type,'LDPC'))
   hDeMod = htDeMod.clone;
   hDeMod.Variance =  1/10^(hChan.SNR/10);
@@ -199,20 +201,22 @@ parfor n=1:env_c
     elseif (strcmp(type,'BCC'))
         encData = step(hConvEnc, txdata); % Conv Enc
     elseif (strcmp(type,'LDPC'))
-        LDPC(txdata, true, false, 0); % LDPC Enc
+        encData = LDPC(txdata, true, false, 0); % LDPC Enc
     end
     
     % Modulate the encoded data
     modData = step(hMod, encData);
     
     % Pass the modulated signal through an AWGN channel
-    if (strcmp(modType,'PSK') || ((strcmp(type,'LDPC'))&& (debug ~= 0)))
-	channelOutput = step(hChan, modData);
+    if (strcmp(modType,'PSK'))
+        channelOutput = step(hChan, modData);
+    elseif (strcmp(type,'LDPC') && debug)
+        channelOutput = step(hChan, modData);
     elseif (strcmp(modType,'QAM'))
-    	channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
+        channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
     end
     % Add AWGN, this accounts for 10*log10(R) modification and additional
-    % power due to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
+    % power to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
     
     % Demodulate the signal 
     rxsyms = step(hDeMod, channelOutput);
@@ -223,7 +227,7 @@ parfor n=1:env_c
     elseif (strcmp(type,'BCC'))
         decData = step(hVitDec, rxsyms); % Viterbi dec
     elseif (strcmp(type,'LDPC'))
-        LDPC(rxsyms, false, false, 0); % LDPC dec
+        decData = LDPC(rxsyms, false, false, 0); % LDPC dec
     end
     
     % Deinterleave the bits % Not interleaving because parity bit math mess
