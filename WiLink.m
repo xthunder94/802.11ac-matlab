@@ -8,9 +8,9 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 3 % 0:9;
-type = 'LDPC'; % ['BCC' 'LDPC'];
-numIter = 1e6 %1e6; %TODO: Include suggested values or std bits simulated
+MCS = 0 % 0:9;
+type = 'BCC'; % ['BCC' 'LDPC'];
+numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
 SNR_Vec = 0:5:30; % in dB
 debug = 1; % If 0, running without encoding
 
@@ -189,7 +189,7 @@ for n=1:env_c
   elseif (strcmp(type,'LDPC'))
     hDeMod = clone(htDeMod);
     hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
-    hDeMod.Variance =  1/10^(hChan.SNR/10);
+    hDeMod.Variance =  1/10^(hChan.SNR/10) * sqrt(R);
     hLDPCEnc = clone(htLDPCEnc);
     hLDPCDec = clone(htLDPCDec);
   end
