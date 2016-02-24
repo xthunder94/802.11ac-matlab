@@ -1,16 +1,18 @@
-function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
+function [modType, M, k, R, k_TCB, puncpat, ...
+    hMod, htDemod] = SetMCS(MCS)
 
     % Reference Materials
     %{
     M = [2 4 16 64 256];                        % the M-ary number
     k = log2(M);                                % # of information bits per symbol
     R = [1/2 3/4 5/6];                          % the encoding rate
+    k_TCB = [5 7.5 10 15]                       % traceback depth constant
     puncpat = -1;                               % Rate 1/2  Default Rate; no puncture 
     puncpat = [1; 1; 1; 0;];                    % Rate 2/3  Figure 18-9
     puncpat = [1; 1; 1; 0; 0; 1;];              % Rate 3/4  Figure 18-9
     puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;];	% Rate 5/6  Figure 20-11
     %}
-    
+
     % Choosing Modulation and Coding Scheme
     switch MCS
         
@@ -20,6 +22,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 2;
             k = log2(M);
             R = 1/2;
+            k_TCB = 5;
             puncpat = -1;
             hMod = comm.BPSKModulator;
             htDemod = comm.BPSKDemodulator;
@@ -30,6 +33,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 4;
             k = log2(M);
             R = 1/2;
+            k_TCB = 5;
             puncpat = -1;
             hMod = comm.QPSKModulator('BitInput', true);
             htDemod = comm.QPSKDemodulator('BitOutput', true);
@@ -40,6 +44,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 4;
             k = log2(M);
             R = 3/4;
+            k_TCB = 10;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.QPSKModulator('BitInput', true);
             htDemod = comm.QPSKDemodulator('BitOutput', true);
@@ -50,6 +55,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 16;
             k = log2(M);
             R = 1/2;
+            k_TCB = 5;
             puncpat = -1;
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -60,6 +66,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 16;
             k = log2(M);
             R = 3/4;
+            k_TCB = 10;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -70,6 +77,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 64;
             k = log2(M);
             R = 2/3;
+            k_TCB = 7.5;
             puncpat = [1; 1; 1; 0;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -80,6 +88,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 64;
             k = log2(M);
             R = 3/4;
+            k_TCB = 10;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -90,6 +99,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 64;
             k = log2(M);
             R = 5/6;
+            k_TCB = 15;
             puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -100,6 +110,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 256;
             k = log2(M);
             R = 3/4;
+            k_TCB = 10;
             puncpat = [1; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -110,6 +121,7 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             M = 256;
             k = log2(M);
             R = 5/6;
+            k_TCB = 15;
             puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;];
             hMod = comm.RectangularQAMModulator('ModulationOrder', M, 'BitInput', true); % See 22.3.10.9
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
@@ -118,4 +130,9 @@ function [modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS)
             warning('Unexpected MCS.')
             
     end
+    
+    if(~((M == 2) || (M == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+        hMod.NormalizationMethod = 'Average power';
+    end
+    
 end
