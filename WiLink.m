@@ -110,10 +110,6 @@ switch MCS
         warning('Unexpected MCS.')
 end
 
-% Configure moderator to use average power
-hMod.NormalizationMethod = 'Average power';
-hMod.AveragePower = 1;
-
 if (debug == 0)
     N_Pre_Pad = 0;
     N_Data_Bits = 1e4;
@@ -159,6 +155,10 @@ elseif (strcmp(type,'LDPC'))
     htLDPCDec = comm.LDPCDecoder(H);
     htErrorCalc = comm.ErrorRate;
     
+    % Configure moderator to use average power
+    hMod.NormalizationMethod = 'Average power';
+    hMod.AveragePower = 1;
+    
     code_block = 648 * R; % Our LDPC matricies are defined for 648 * R fixed input
     N_Pre_Pad = 0;
     N_Data_Bits = code_block;
@@ -188,8 +188,6 @@ for n=1:env_c
     hDeMod = clone(htDeMod);
   elseif (strcmp(type,'BCC'))
     hDeMod = clone(htDeMod);
-    hDeMod.NormalizationMethod = 'Average power';
-    hDeMod.AveragePower = 1;
     hConvEnc = clone(htConvEnc);
     hVitDec = clone(htVitDec);
   elseif (strcmp(type,'LDPC'))
