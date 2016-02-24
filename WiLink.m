@@ -8,12 +8,21 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 9 % 0:9;
-type = 'BCC'; % ['BCC' 'LDPC'];
-numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
-SNR_Vec = 0:5:30; % in dB
+MCS = 0 % 0:9;
+type = 'LDPC'; % ['BCC' 'LDPC'];
+
+numIter = 1; 
+SNR_Vec = 0:16; % in dB
 debug = 1; % If 0, running without encoding
 
+%% Preset Generation 
+    if (debug == 0)
+        numIter = 1e2;
+    elseif (strcmp(type,'BCC'))
+        numIter = 1e3;
+    elseif (strcmp(type,'LDPC'))
+        numIter = 1e4;
+    end
 %% Choosing which Modulation and Coding Scheme 
 switch MCS
     case 0 
@@ -176,7 +185,7 @@ tic;
 % Run the simulation numIter amount of times
 % Note that using a parallel pool will not output graphs. 
 % Graphs will be generated and can be saved using print
-for n=1:env_c
+parfor n=1:env_c
   %reset(hErrorCalc)
   %reset(hConvEnc)
   %reset(hVitDec)
