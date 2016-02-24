@@ -8,9 +8,9 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 6 % 0:9;
-type = 'BCC'; % ['BCC' 'LDPC'];
-numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
+MCS = 3 % 0:9;
+type = 'LDPC'; % ['BCC' 'LDPC'];
+numIter = 1e6 %1e6; %TODO: Include suggested values or std bits simulated
 SNR_Vec = 0:5:30; % in dB
 debug = 1; % If 0, running without encoding
 
@@ -150,10 +150,12 @@ elseif (strcmp(type,'BCC'))
     N_Data_Bits = N_DATA-N_Pre_Pad-N_Post_Pad;
 elseif (strcmp(type,'LDPC'))
     % LDPC matrix initialization
-    LDPC(0, false, true, 1/2);
+    H = LDPC(R);
+    htLDPCEnc = comm.LDPCEncoder(H);
+    htLDPCDec = comm.LDPCDecoder(H);
     htErrorCalc = comm.ErrorRate;
     
-    code_block = 324; % Our LDPC matricies are defined for 324 fixed input
+    code_block = 648 * R; % Our LDPC matricies are defined for 648 * R fixed input
     N_Pre_Pad = 0;
     N_Data_Bits = code_block;
     N_Post_Pad = 0;
@@ -170,7 +172,7 @@ tic;
 % Run the simulation numIter amount of times
 % Note that using a parallel pool will not output graphs. 
 % Graphs will be generated and can be saved using print
-parfor n=1:env_c
+for n=1:env_c
   %reset(hErrorCalc)
   %reset(hConvEnc)
   %reset(hVitDec)
@@ -179,14 +181,17 @@ parfor n=1:env_c
   
   hErrorCalc = htErrorCalc.clone;
   if (debug == 0)
-  hDeMod = clone(htDeMod);
+    hDeMod = clone(htDeMod);
   elseif (strcmp(type,'BCC'))
-  hDeMod = clone(htDeMod);
-  hConvEnc = clone(htConvEnc);
-  hVitDec = clone(htVitDec);
+    hDeMod = clone(htDeMod);
+    hConvEnc = clone(htConvEnc);
+    hVitDec = clone(htVitDec);
   elseif (strcmp(type,'LDPC'))
-  hDeMod = clone(htDeMod);
-  hDeMod.Variance =  1/10^(hChan.SNR/10);
+    hDeMod = clone(htDeMod);
+    hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
+    hDeMod.Variance =  1/10^(hChan.SNR/10);
+    hLDPCEnc = clone(htLDPCEnc);
+    hLDPCDec = clone(htLDPCDec);
   end
   for i = 1:numIter
     % Generate binary frames of size specified by the frameLength variable
@@ -201,7 +206,7 @@ parfor n=1:env_c
     elseif (strcmp(type,'BCC'))
         encData = step(hConvEnc, txdata); % Conv Enc
     elseif (strcmp(type,'LDPC'))
-        encData = LDPC(txdata, true, false, 0); % LDPC Enc
+        encData = step(hLDPCEnc, txdata); % LDPC Enc
     end
     
     % Modulate the encoded data
@@ -227,14 +232,14 @@ parfor n=1:env_c
     elseif (strcmp(type,'BCC'))
         decData = step(hVitDec, rxsyms); % Viterbi dec
     elseif (strcmp(type,'LDPC'))
-        decData = LDPC(rxsyms, false, false, 0); % LDPC dec
+        decData = step(hLDPCDec, rxsyms); % LDPC dec
     end
     
     % Deinterleave the bits % Not interleaving because parity bit math mess
     data = decData; %randdeintrlv(decData,sum(double('Keenesus')));
 
     % Compute and accumulate errors
-    BERVec(:,n) = step(hErrorCalc, bits, data);
+    BERVec(:,n) = step(hErrorCalc, bits, double(data));
   end
   
   %waitbar(n/env_c,h,sprintf('Evaluating %d',EbNoEncoderOutput(n)))

@@ -1,24 +1,23 @@
 clear all; close all; clc;
 format compact;
-LDPC(0, false, true, 1/2);
-for qam = [4 16 32 64 128 256]
-    hMod = comm.RectangularQAMModulator('ModulationOrder', qam, 'BitInput', true);
-    for snr = 0:16
-        hChan = comm.AWGNChannel('NoiseMethod', 'Signal to noise ratio (SNR)', 'SNR', snr);
-        hDemod = comm.RectangularQAMDemodulator('ModulationOrder', qam, 'BitOutput', true, ...
-                'DecisionMethod', 'Approximate log-likelihood ratio', ...
-                'Variance', 1/10^(hChan.SNR/10));
-        hError = comm.ErrorRate;
-        for counter = 1:10000
-          data           = logical(randi([0 1], 324, 1));
-          encodedData    = LDPC(data, true, false, 0);
-          modSignal      = step(hMod, encodedData);
-          receivedSignal = step(hChan, modSignal);
-          demodSignal    = step(hDemod, receivedSignal);
-          receivedBits   = LDPC(demodSignal, false, false, 0);
-          errorStats     = step(hError, data, receivedBits);
-        end
-        fprintf('Error rate       = %1.2f\nNumber of errors = %d\n', ...
-          errorStats(1), errorStats(2))
+H = LDPC(1/2);
+hEnc = comm.LDPCEncoder(H);
+hDec = comm.LDPCDecoder(H);
+hMod = comm.RectangularQAMModulator('ModulationOrder', 16, 'BitInput', true);
+berawgn(10 - 10*log10(3), 'qam', 16)
+for snr = 10
+    hChan = comm.AWGNChannel('NoiseMethod', 'Signal to noise ratio (SNR)', 'SNR', snr);
+    hDemod = comm.RectangularQAMDemodulator('ModulationOrder', 16, 'BitOutput', true);
+    hError = comm.ErrorRate;
+    for counter = 1:1000
+      data           = logical(randi([0 1], 324, 1));
+      encodedData    = step(hEnc, data);
+      modSignal      = step(hMod, encodedData);
+      receivedSignal = step(hChan, modSignal);
+      demodSignal    = step(hDemod, receivedSignal);
+      receivedBits   = step(hDec, demodSignal);
+      errorStats     = step(hError, data, receivedBits);
     end
+    fprintf('Error rate       = %1.2f\nNumber of errors = %d\n', ...
+      errorStats(1), errorStats(2))
 end

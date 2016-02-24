@@ -1,31 +1,4 @@
-function [bitsOutput] = LDPC(bitsInput, isEncode, isInitialize, CodeRate)
-    % LDPC Encodes LDPC According to 802.11AC Standard
-    %    802.11AC Optional LDPC Encoding
-    persistent H hEnc hDec;
-    if isInitialize
-        H = HTLDPC(CodeRate);
-        hEnc = comm.LDPCEncoder(H);
-        hDec = comm.LDPCDecoder(H);
-        return
-    end
-    if isEncode
-        bitsOutput = step(hEnc, bitsInput);
-    else
-        bitsOutput = step(hDec, bitsInput);
-    end
-end
-
-function [C] = B(i)
-    % Subblock Size Z=27
-    C = circshift(eye(27), i, 2);
-end
-
-function [C] = E()
-    % Empty Subblock Z=27
-    C = zeros(27);
-end
-
-function [H] = HTLDPC(r)
+function [H] = LDPC(r)
     if r == 1/2
         H = [B(00) E     E     E     B(00) B(00) E     E     B(00) E     E     B(00) B(01) B(00) E     E     E     E     E     E     E     E     E     E    ; ...
              B(22) B(00) E     E     B(17) E     B(00) B(00) B(12) E     E     E     E     B(00) B(00) E     E     E     E     E     E     E     E     E    ; ...
@@ -69,4 +42,14 @@ function [H] = HTLDPC(r)
         ];
     end
     H = sparse(H);
+end
+
+function [C] = B(i)
+    % Subblock Size Z=27
+    C = circshift(eye(27), i, 2);
+end
+
+function [C] = E()
+    % Empty Subblock Z=27
+    C = zeros(27);
 end
