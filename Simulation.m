@@ -1,6 +1,6 @@
 function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     modType, k, M, hMod, htDemod, ...
-    htConvEnc, htVitDec, htErrorCalc, ...
+    htEnc, htDec, htErrorCalc, ...
     N_Pre_Pad, N_Data_Bits, N_Post_Pad)
 
     % Create a vector to store the BER computed during each iteration
@@ -17,31 +17,25 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     for n = 1:env_c
         
         %reset(hErrorCalc)
-        %reset(hConvEnc)
-        %reset(hVitDec)
+        %reset(hEnc)
+        %reset(hDec)
         
         hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
     
         hErrorCalc = htErrorCalc.clone;
-        if (debug == 0)
-            hDemod = htDemod;
-        elseif (strcmp(encType,'BCC'))
-            hDemod = htDemod;
-            hConvEnc = clone(htConvEnc);
-            hVitDec = clone(htVitDec);
-        elseif (strcmp(encType,'LDPC'))
-            hDemod = htDemod.clone;
-            hDemod.Variance =  1/10^(hChan.SNR/10);
+        hDemod = clone(htDemod);
+        
+        if(debug ~= 0) % for encoding
+            if(~((M == 2) || (M == 4)))
+                hDemod.NormalizationMethod = 'Average power';
+            end
+            hEnc = clone(htEnc);
+            hDec = clone(htDec);                
+            if (strcmp(encType,'LDPC'))
+                hDemod.DecisionMethod = 'Approximate log-likelihood ratio';
+                hDemod.Variance =  1/10^(hChan.SNR/10);
+            end
         end
-    
-        %{
-        hErrorCalc = htErrorCalc.clone;
-        if(~strcmp(encType, 'LDPC'))
-            hConvEnc = htConvEnc.clone;
-            hVitDec = htVitDec.clone;
-        end
-        hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
-        %}
         
         for i = 1:numIter
             
@@ -54,19 +48,15 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
             % Encode the data
             if (debug == 0)
                 encData = txdata; % for debug no encoding
-            elseif (strcmp(encType, 'BCC'))
-                encData = step(hConvEnc, txdata); % Conv Enc
-            elseif (strcmp(encType, 'LDPC'))
-                encData = LDPC(txdata, true, false, 0); % LDPC Enc
+            else
+                encData = step(hEnc, txdata); % for encoding
             end
             
             % Modulate the encoded data
             modData = step(hMod, encData);
             
             % Pass the modulated signal through an AWGN channel
-            if (strcmp(modType,'PSK'))
-                channelOutput = step(hChan, modData);
-            elseif (strcmp(encType,'LDPC') && debug)
+            if (strcmp(modType,'PSK') || (strcmp(encType,'LDPC') && debug))
                 channelOutput = step(hChan, modData);
             elseif (strcmp(modType,'QAM'))
                 channelOutput = awgn(modData, SNR_Vec(n), 'measured');
@@ -75,22 +65,20 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
             % power due to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
             
             % Demodulate the signal
-            rxsyms = step(htDemod, channelOutput);
+            rxsyms = step(hDemod, channelOutput);
             
             % Pass the demodulated channel outputs as input to the decoder
             if (debug == 0)
                 decData = rxsyms; % for debug no encoding
-            elseif (strcmp(encType,'BCC'))
-                decData = step(hVitDec, rxsyms); % Viterbi dec
-            elseif (strcmp(encType,'LDPC'))
-                decData = LDPC(rxsyms, false, false, 0); % LDPC dec
+            else
+                decData = step(hDec, rxsyms); % for decoding
             end
             
             % Deinterleave the bits % Not interleaving because parity bit math mess
             data = decData; %randdeintrlv(decData,sum(double('Keenesus')));
             
             % Compute and accumulate errors
-            BER_Vec(:,n) = step(hErrorCalc, bits, data);
+            BER_Vec(:,n) = step(hErrorCalc, bits, double(data));
         end
         
         %waitbar(n/env_c,h,sprintf('Evaluating %d',EbNoEncoderOutput(n)))
@@ -106,4 +94,3 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     berHypo = berawgn(SNR_Vec - 10*log10(k), modType, M, 'nondiff');
     
 end
-    
