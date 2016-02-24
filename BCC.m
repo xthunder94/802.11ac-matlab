@@ -1,20 +1,21 @@
-function [htConvEnc, htVitDec, htErrorCalc, ...
-    N_Pre_Pad, N_Data_Bits, N_Post_Pad] = BCC(k, R, puncpat)
+function [htEnc, htDec, htErrorCalc, ...
+    N_Pre_Pad, N_Data_Bits, N_Post_Pad] = BCC(k, R, k_TCB, puncpat)
 
     % Convolutional Encoding Setup
     constlen = 7;
     codegen = [171 133]; 
     trellis = poly2trellis(constlen, codegen); % Industry standard 18.3.5.6
-    htConvEnc = comm.ConvolutionalEncoder(trellis); 
-    htVitDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard'); 
-    htVitDec.TracebackDepth = 96;
-    htErrorCalc = comm.ErrorRate('ReceiveDelay', htVitDec.TracebackDepth);
+    htEnc = comm.ConvolutionalEncoder(trellis); 
+    htDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard'); 
+    htDec.TracebackDepth = 96;
+    %htVitDec.TracebackDepth = k_TCB*(constlen-1);
+    htErrorCalc = comm.ErrorRate('ReceiveDelay', htDec.TracebackDepth);
 
     if (puncpat ~= -1)
-        htConvEnc.PuncturePatternSource = 'Property';
-        htVitDec.PuncturePatternSource = 'Property';
-        htConvEnc.PuncturePattern = puncpat;
-        htVitDec.PuncturePattern = puncpat;
+        htEnc.PuncturePatternSource = 'Property';
+        htDec.PuncturePatternSource = 'Property';
+        htEnc.PuncturePattern = puncpat;
+        htDec.PuncturePattern = puncpat;
     end
 
     % Math Setup for # of bits
