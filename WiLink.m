@@ -9,8 +9,8 @@ warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
 MCS = 9 % 0:9;
-type = 'LDPC'; % ['BCC' 'LDPC'];
-numIter = 1e4 %1e6; %TODO: Include suggested values or std bits simulated
+type = 'BCC'; % ['BCC' 'LDPC'];
+numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
 SNR_Vec = 0:5:30; % in dB
 debug = 1; % If 0, running without encoding
 
@@ -110,7 +110,9 @@ switch MCS
         warning('Unexpected MCS.')
 end
 
+% Configure moderator to use average power
 hMod.NormalizationMethod = 'Average power';
+hMod.AveragePower = 1;
 
 if (debug == 0)
     N_Pre_Pad = 0;
@@ -187,6 +189,7 @@ for n=1:env_c
   elseif (strcmp(type,'BCC'))
     hDeMod = clone(htDeMod);
     hDeMod.NormalizationMethod = 'Average power';
+    hDeMod.AveragePower = 1;
     hConvEnc = clone(htConvEnc);
     hVitDec = clone(htVitDec);
   elseif (strcmp(type,'LDPC'))
@@ -194,6 +197,7 @@ for n=1:env_c
     hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
     hDeMod.Variance =  1/10^(hChan.SNR/10);
     hDeMod.NormalizationMethod = 'Average power';
+    hDeMod.AveragePower = 1;
     hLDPCEnc = clone(htLDPCEnc);
     hLDPCDec = clone(htLDPCDec);
   end
