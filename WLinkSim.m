@@ -7,6 +7,7 @@ clear all; close all; clc; format compact;
 % warnings that occur when running remotely
 warning('off','MATLAB:xlswrite:AddSheet');
 warning('off','MATLAB:xlswrite:NoCOMServer');
+warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -14,10 +15,10 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Specify SNR range in dB
-SNR_Vec = 0:5:30;
+SNR_Vec = 0:5:30
 
 % Specify modulation and coding scheme (ranges from 0-9)
-MCS = 9;
+MCS = 1;
 %{
 0: BPSK Rate 1/2
 1: QPSK Rate 1/2
@@ -32,9 +33,9 @@ MCS = 9;
 %}
 
 % Specify encoding method (BCC or LDPC)
-encType = 'BCC';
+encType = 'LDPC';
 
-% Specify debug mode(0 if running without encoding, else -1)
+% Specify debug mode (0 if running without encoding)
 debug = -1;
 
 % Specify number of iterations for simulation
@@ -46,17 +47,19 @@ numIter = 1e1; %1e6
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Set modulation and coding scheme
-[modType, M, k, R, puncpat hMod, htDemod] = SetMCS(MCS);
+[modType, M, k, R, k_TCB, puncpat hMod, htDemod] = SetMCS(MCS);
 
 % Set encoding method (BCC or LDPC, debug or no debug)
-[htConvEnc, htVitDec, htErrorCalc, ...
-    N_Pre_Pad, N_Data_Bits, N_Post_Pad] = SetEncoder(encType, debug, k, R, puncpat);
+[htEnc, htDec, htErrorCalc, ...
+    N_Pre_Pad, N_Data_Bits, N_Post_Pad] = SetEncoder(encType, debug, k, R, k_TCB, puncpat);
 
 % Run simulation and retrieve BERs
 [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     modType, k, M, hMod, htDemod, ...
-    htConvEnc, htVitDec, htErrorCalc, ...
+    htEnc, htDec, htErrorCalc, ...
     N_Pre_Pad, N_Data_Bits, N_Post_Pad)
+
+check = ((berHypo - ber) > 0)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
