@@ -257,7 +257,12 @@ ber = BERVec(1,:)
 
 %% Compute the theoretical BER for this scenario
 figure
-berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
+    % Compute the theoretical BERs for this scenario
+    if (debug ~= 0) % for encoding
+        berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
+    else 
+        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
+    end
 semilogy(SNR_Vec,berHypo,'r')
 hold on
 semilogy(SNR_Vec,BERVec(1,:));
