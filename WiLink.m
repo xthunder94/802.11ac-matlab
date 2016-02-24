@@ -8,14 +8,12 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 0 % 0:9;
 type = 'LDPC'; % ['BCC' 'LDPC'];
 
-numIter = 1; 
+%% Preset Generation 
+MCS_Vec = 0:9;
 SNR_Vec = 0:16; % in dB
 debug = 1; % If 0, running without encoding
-
-%% Preset Generation 
     if (debug == 0)
         numIter = 1e2;
     elseif (strcmp(type,'BCC'))
@@ -23,7 +21,12 @@ debug = 1; % If 0, running without encoding
     elseif (strcmp(type,'LDPC'))
         numIter = 1e4;
     end
-%% Choosing which Modulation and Coding Scheme 
+
+%% Simulate for all MCS
+R_Vec = zeros(3,length(SNR_Vec),length(MCS_Vec)); % Allocate memory to store results
+
+for MCS = MCS_Vec
+%% Choosing which Modulation and Coding Scheme
 switch MCS
     case 0 
         disp('BPSK Rate 1/2')
@@ -34,6 +37,7 @@ switch MCS
         hMod = comm.BPSKModulator;
         htDeMod = comm.BPSKDemodulator;
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = 
     case 1 
         disp('QPSK Rate 1/2')
         modType = 'PSK';
@@ -120,6 +124,7 @@ switch MCS
 end
 
 if (debug == 0)
+    R = 1; % No encoding
     N_Pre_Pad = 0;
     N_Data_Bits = 1e4;
     N_Post_Pad = 0;
@@ -262,11 +267,17 @@ end % End iteration
 toc;
 %close(h);
 
+R_Vec(:,:,1) = BERVec;
+EbNo_Vec = SNR_Vec - 10*log10(k*R);
+semilogy(EbNo_Vec, BERVec(1,:), lSpec);
+end
+
 ber = BERVec(1,:)
 
 %% Compute the theoretical BER for this scenario
 figure
     % Compute the theoretical BERs for this scenario
+
     if (debug ~= 0) % for encoding
         berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
     else 
@@ -279,6 +290,8 @@ hold off
 xlabel('SNR (dB)')
 legend('Theoretical BER', 'BER');
 title(strcat(num2str(msgM), ' ', modType));
+
+
 
 %{
 filename = sprintf('snr%d_ber%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
