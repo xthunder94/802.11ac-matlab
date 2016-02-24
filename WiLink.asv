@@ -8,9 +8,9 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 9 % 0:9;
+MCS =  % 0:9;
 type = 'LDPC'; % ['BCC' 'LDPC'];
-numIter = 1e4 %1e6; %TODO: Include suggested values or std bits simulated
+numIter = 1e2 %1e6; %TODO: Include suggested values or std bits simulated
 SNR_Vec = 0:5:30; % in dB
 debug = 1; % If 0, running without encoding
 
