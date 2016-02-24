@@ -10,9 +10,9 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     tic;
     %waitbars are invalid in parallel pools.
     %h = waitbar(0, 'Initializing data cannon...');
-
+    
     % Run the simulation numIter amount of times
-    % Note that using a parallel pool will not output graphs. 
+    % Note that using a parallel pool will not output graphs.
     % Graphs will be generated and can be saved using print
     for n = 1:env_c
         
@@ -21,26 +21,32 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
         %reset(hDec)
         
         hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
-    
         hErrorCalc = htErrorCalc.clone;
-        hDemod = clone(htDemod);
         
-        if(debug ~= 0) % for encoding
-            if(~((M == 2) || (M == 4)))
+        if (debug == 0)
+            hDemod = clone(htDemod);
+        elseif (strcmp(type,'BCC'))
+            hDemod = clone(htDemod);
+            if(~((M == 2) || (M == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+                hDemod.NormalizationMethod = 'Average power';
+            end
+                hEnc = clone(htEnc);
+            hDec = clone(htDec);
+        elseif (strcmp(type,'LDPC'))
+            hDemod = clone(htDemod);
+            hDemod.DecisionMethod = 'Approximate log-likelihood ratio';
+            hDemod.Variance =  1/10^(hChan.SNR/10);
+            if(~((M == 2) || (M == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
                 hDemod.NormalizationMethod = 'Average power';
             end
             hEnc = clone(htEnc);
-            hDec = clone(htDec);                
-            if (strcmp(encType,'LDPC'))
-                hDemod.DecisionMethod = 'Approximate log-likelihood ratio';
-                hDemod.Variance =  1/10^(hChan.SNR/10);
-            end
+            hDec = clone(htDec);
         end
         
         for i = 1:numIter
-            
+        
             % Generate binary frames of size specified by the frameLength variable
-            bits = [zeros(N_Pre_Pad,1); logical(randi([0 1], N_Data_Bits,1)); zeros(N_Post_Pad,1)];
+            bits = [zeros(N_Pre_Pad,1);logical(randi([0 1], N_Data_Bits,1));zeros(N_Post_Pad,1)];
             
             % Interleave the bits   % Not interleaving because parity bit math mess
             txdata = bits; %randintrlv(bits,sum(double('Keenesus')));
@@ -48,21 +54,25 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
             % Encode the data
             if (debug == 0)
                 encData = txdata; % for debug no encoding
-            else
-                encData = step(hEnc, txdata); % for encoding
+            elseif (strcmp(type,'BCC'))
+                encData = step(hEnc, txdata); % Conv Enc
+            elseif (strcmp(type,'LDPC'))
+                encData = step(hEnc, txdata); % LDPC Enc
             end
             
             % Modulate the encoded data
             modData = step(hMod, encData);
             
             % Pass the modulated signal through an AWGN channel
-            if (strcmp(modType,'PSK') || (strcmp(encType,'LDPC') && debug))
+            if (strcmp(modType,'PSK'))
+                channelOutput = step(hChan, modData);
+            elseif (strcmp(type,'LDPC') && debug)
                 channelOutput = step(hChan, modData);
             elseif (strcmp(modType,'QAM'))
                 channelOutput = awgn(modData, SNR_Vec(n), 'measured');
             end
             % Add AWGN, this accounts for 10*log10(R) modification and additional
-            % power due to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
+            % power to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
             
             % Demodulate the signal
             rxsyms = step(hDemod, channelOutput);
@@ -70,22 +80,18 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
             % Pass the demodulated channel outputs as input to the decoder
             if (debug == 0)
                 decData = rxsyms; % for debug no encoding
-            else
-                decData = step(hDec, rxsyms); % for decoding
+            elseif (strcmp(type,'BCC'))
+                decData = step(hDec, rxsyms); % Viterbi dec
+            elseif (strcmp(type,'LDPC'))
+                decData = step(hDec, rxsyms); % LDPC dec
             end
             
             % Deinterleave the bits % Not interleaving because parity bit math mess
             data = decData; %randdeintrlv(decData,sum(double('Keenesus')));
             
             % Compute and accumulate errors
-            BER_Vec(:,n) = step(hErrorCalc, bits, double(data));
+            BERVec(:,n) = step(hErrorCalc, bits, double(data));
         end
-        
-        %waitbar(n/env_c,h,sprintf('Evaluating %d',EbNoEncoderOutput(n)))
-    end % End iteration
-    
-    toc;
-    %close(h);
 
     % Extract the BERs
     ber = BER_Vec(1,:);
