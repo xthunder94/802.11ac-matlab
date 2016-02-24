@@ -4,9 +4,7 @@ H = LDPC(1/2);
 hEnc = comm.LDPCEncoder(H);
 hDec = comm.LDPCDecoder(H);
 hMod = comm.RectangularQAMModulator('ModulationOrder', 256, 'BitInput', true);
-hMod.NormalizationMethod = 'Average power';
-hMod.AveragePower = 1;
-berawgn(10, 'qam', 256)
+berawgn(10 - 10*log10(3), 'qam', 256)
 for snr = 10
     hChan = comm.AWGNChannel('NoiseMethod', 'Signal to noise ratio (SNR)', 'SNR', snr);
     hDemod = comm.RectangularQAMDemodulator('ModulationOrder', 256, 'BitOutput', true);
@@ -15,11 +13,11 @@ for snr = 10
     hDemod.DecisionMethod = 'Approximate log-likelihood ratio';
     hDemod.Variance =  1/10^(hChan.SNR/10);
     hError = comm.ErrorRate;
-    for counter = 1:100
+    for counter = 1:1
       data           = logical(randi([0 1], 324, 1));
       encodedData    = step(hEnc, data);
       modSignal      = step(hMod, encodedData);
-      %scatterplot(modSignal)
+      scatterplot(modSignal)
       receivedSignal = step(hChan, modSignal);
       demodSignal    = step(hDemod, receivedSignal);
       receivedBits   = step(hDec, demodSignal);

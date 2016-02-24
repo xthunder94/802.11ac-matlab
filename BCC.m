@@ -7,8 +7,8 @@ function [htEnc, htDec, htErrorCalc, ...
     trellis = poly2trellis(constlen, codegen); % Industry standard 18.3.5.6
     htEnc = comm.ConvolutionalEncoder(trellis); 
     htDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard'); 
-    htDec.TracebackDepth = 96;
-    %htVitDec.TracebackDepth = k_TCB*(constlen-1);
+    % htDec.TracebackDepth = 96; % suggested value for BPSK with R = 1/2
+    htDec.TracebackDepth = k_TCB*(constlen-1);
     htErrorCalc = comm.ErrorRate('ReceiveDelay', htDec.TracebackDepth);
 
     if (puncpat ~= -1)
