@@ -1,5 +1,8 @@
-function [modType, M, k, R, k_TCB, puncpat, ...
-    hMod, htDemod] = SetMCS(MCS)
+% Helper function that sets modulation and coding scheme and related
+% parameters based on inputs
+
+function [display, modType, lSpec, M, k, R, k_TCB, puncpat, ...
+    hMod, htDemod] = SetMCS(MCS, encType, debug)
 
     % Reference Materials
     %{
@@ -17,8 +20,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
     switch MCS
         
         case 0
-            disp('BPSK Rate 1/2')
+            display = 'BPSK Rate 1/2';
             modType = 'PSK';
+            lSpec = '*r-';
             M = 2;
             k = log2(M);
             R = 1/2;
@@ -28,8 +32,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.BPSKDemodulator;
             
         case 1
-            disp('QPSK Rate 1/2')
+            display = 'QPSK Rate 1/2';
             modType = 'PSK';
+            lSpec = '*g-';
             M = 4;
             k = log2(M);
             R = 1/2;
@@ -37,10 +42,11 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             puncpat = -1;
             hMod = comm.QPSKModulator('BitInput', true);
             htDemod = comm.QPSKDemodulator('BitOutput', true);
-  
+            
         case 2
-            disp('QPSK Rate 3/4')
+            display = 'QPSK Rate 3/4';
             modType = 'PSK';
+            lSpec = 'xg-';
             M = 4;
             k = log2(M);
             R = 3/4;
@@ -50,8 +56,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.QPSKDemodulator('BitOutput', true);
             
         case 3 
-            disp('16-QAM Rate 1/2')
+            display = '16-QAM Rate 1/2';
             modType = 'QAM';
+            lSpec = '*c-';
             M = 16;
             k = log2(M);
             R = 1/2;
@@ -61,8 +68,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 4 
-            disp('16-QAM Rate 3/4')
+            display = '16-QAM Rate 3/4';
             modType = 'QAM';
+            lSpec = 'xc-';
             M = 16;
             k = log2(M);
             R = 3/4;
@@ -72,8 +80,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 5
-            disp('64-QAM Rate 2/3')
+            display = '64-QAM Rate 2/3';
             modType = 'QAM';
+            lSpec = '+b-';
             M = 64;
             k = log2(M);
             R = 2/3;
@@ -83,8 +92,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 6
-            disp('64-QAM Rate 3/4')
+            display = '64-QAM Rate 3/4';
             modType = 'QAM';
+            lSpec = 'xb-';
             M = 64;
             k = log2(M);
             R = 3/4;
@@ -94,8 +104,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
 
         case 7
-            disp('64-QAM Rate 5/6')
+            display = '64-QAM Rate 5/6';
             modType = 'QAM';
+            lSpec = '.b-';
             M = 64;
             k = log2(M);
             R = 5/6;
@@ -105,8 +116,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 8
-            disp('256-QAM Rate 3/4')
+            display = '256-QAM Rate 3/4';
             modType = 'QAM';
+            lSpec = 'xm-';
             M = 256;
             k = log2(M);
             R = 3/4;
@@ -116,8 +128,9 @@ function [modType, M, k, R, k_TCB, puncpat, ...
             htDemod = comm.RectangularQAMDemodulator('ModulationOrder', M, 'BitOutput', true);
             
         case 9
-            disp('256-QAM Rate 5/6')
+            display = '256-QAM Rate 5/6';
             modType = 'QAM';
+            lSpec = '.m-';
             M = 256;
             k = log2(M);
             R = 5/6;
@@ -128,11 +141,16 @@ function [modType, M, k, R, k_TCB, puncpat, ...
 
         otherwise 
             warning('Unexpected MCS.')
-            
     end
     
-    if(~((M == 2) || (M == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+    % Configure LDPC moderator to use average power
+    if(~((M == 2) || (M == 4)) && strcmp(encType, 'LDPC')) % NormalizationMethod doesn't exist for BPSK or QPSK
         hMod.NormalizationMethod = 'Average power';
+        hMod.AveragePower = 1;
     end
     
+    if (debug == 0)
+        R = 1; % No encoding
+    end
+
 end
