@@ -291,7 +291,7 @@ waitbar(MCS/MCS_Vec(length(MCS_Vec)),h,sprintf('Evaluating MCS %d',MCS));
 end
 close(h);
 
-hold off
+%hold off
 xlabel('SNR (dB)');
 ylabel('Bit Error Rate (BER)');
 title(strcat('802.11ac:', type));
@@ -303,6 +303,38 @@ legend('BPSK Rate 1/2 (MCS 0)', ...
     '64-QAM Rate 2/3 (MCS 5)', '64-QAM Rate 3/4 (MCS 6)', '64-QAM Rate 5/6 (MCS 7)', ...
     '256-QAM Rate 3/4 (MCS 8)', '256-QAM Rate 5/6 (MCS 9)');
 else 
+end
+
+hold on
+for MCS = MCS_Vec
+switch MCS
+    case 0 
+        display = 'BPSK Rate 1/2';
+    case 1 
+        display = 'QPSK Rate 1/2';
+    case 2
+        display = 'QPSK Rate 3/4';
+    case 3 
+        display = '16-QAM Rate 1/2';
+    case 4 
+        display = '16-QAM Rate 3/4';
+    case 5
+        display = '64-QAM Rate 2/3';
+    case 6
+        display = '64-QAM Rate 3/4';
+    case 7
+        display = '64-QAM Rate 5/6';
+    case 8
+        display = '256-QAM Rate 3/4';
+    case 9
+        display = '256-QAM Rate 5/6';
+    otherwise 
+        warning('Unexpected MCS.')
+end
+    theo_disp = strsplit(display);
+    berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
+    semilogy(SNR_Vec,berHypo,'k', 'DisplayName', strcat('Theoretical ', char(theo_disp(1))));
+    hold on
 end
 
 %filename = sprintf('%s.csv',type);
