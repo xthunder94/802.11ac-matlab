@@ -1,3 +1,6 @@
+% Helper function to simulate for a provided number of iterations, returns
+% both actual and hypothetical BER vectors
+
 function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     modType, k, R, M, hMod, htDemod, ...
     htEnc, htDec, htErrorCalc, ...
@@ -22,18 +25,19 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
         
         hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
     
-        hErrorCalc = htErrorCalc.clone;
+        hErrorCalc = clone(htErrorCalc);
         hDemod = clone(htDemod);
         
         if(debug ~= 0) % for encoding
-            if(~((M == 2) || (M == 4)))
-                hDemod.NormalizationMethod = 'Average power';
-            end
             hEnc = clone(htEnc);
             hDec = clone(htDec);                
             if (strcmp(encType,'LDPC'))
                 hDemod.DecisionMethod = 'Approximate log-likelihood ratio';
                 hDemod.Variance =  1/10^(hChan.SNR/10);
+                if(~((M == 2) || (M == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+                    hDemod.NormalizationMethod = 'Average power';
+                    hDemod.AveragePower = 1;
+                end
             end
         end
         
@@ -88,12 +92,9 @@ function [ber, berHypo] = Simulation(numIter, SNR_Vec, encType, debug, ...
     %close(h);
 
     % Extract the BERs
-    ber = BER_Vec;%(1,:);
+    ber = BER_Vec(1,:);
     
     % Compute the theoretical BERs for this scenario
-    if (debug ~= 0) % for encoding
-        berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, M, 'nondiff');
-    else 
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, M, 'nondiff');
-    end
+    berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, M, 'nondiff');
+    
 end
