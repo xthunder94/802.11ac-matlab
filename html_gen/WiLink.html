@@ -1,0 +1,714 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>WiLink</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-02-25"><meta name="DC.source" content="WiLink.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1
+}
+
+  </style>
+  <script src="./assets/jq.js"></script><script src="./assets/c.js"></script>
+  </head><body><canvas id="canvas" width="auto" height="auto"></canvas><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Inputs</a></li><li><a href="#3">Preset Generation</a></li><li><a href="#4">Simulate for all MCS</a></li><li><a href="#5">Graph Labeling</a></li><li><a href="#6">Data Output</a></li><li><a href="#7">Sample BCC Output</a></li></ul></div><pre class="codeinput"><span class="comment">% BER simulation of VHT SU 802.11 ac</span>
+<span class="comment">% Derived from a skeleton BER script for a wireless link simulation encased in human</span>
+<span class="comment">%function [ber] = WirelessLinkSimulation(MCS)</span>
+clear <span class="string">all</span>;close <span class="string">all</span>;clc;format <span class="string">compact</span>;
+<span class="comment">% warnings that occur when running remotely</span>
+warning(<span class="string">'off'</span>,<span class="string">'MATLAB:xlswrite:AddSheet'</span>);
+warning(<span class="string">'off'</span>,<span class="string">'MATLAB:xlswrite:NoCOMServer'</span>);
+warning(<span class="string">'off'</span>,<span class="string">'MATLAB:mir_warning_maybe_uninitialized_temporary'</span>);
+</pre><a name="2"></a><h2>Inputs</h2><pre class="codeinput">type = <span class="string">'BCC'</span>; <span class="comment">% ['BCC' 'LDPC'];</span>
+</pre><a name="3"></a><h2>Preset Generation</h2><pre class="codeinput">MCS_Vec = 0:9;
+SNR_Vec = 0:20; <span class="comment">% in dB</span>
+debug = -1; <span class="comment">% If 0, running without encoding</span>
+    <span class="keyword">if</span> (debug == 0)
+        numIter = 1e3;
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'BCC'</span>))
+        numIter = 1e3;
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'LDPC'</span>))
+        numIter = 1e4;
+    <span class="keyword">end</span>
+</pre><a name="4"></a><h2>Simulate for all MCS</h2><pre class="codeinput">R_Vec = zeros(3,length(SNR_Vec),length(MCS_Vec)); <span class="comment">% Allocate memory to store results</span>
+
+<span class="comment">%waitbars are invalid in parallel pools.</span>
+h = waitbar(0, <span class="string">'Initializing data cannon...'</span>);
+<span class="keyword">for</span> MCS = MCS_Vec
+<span class="comment">% Choosing which Modulation and Coding Scheme</span>
+<span class="keyword">switch</span> MCS
+    <span class="keyword">case</span> 0
+        display = <span class="string">'BPSK Rate 1/2'</span>;
+        modType = <span class="string">'PSK'</span>;
+        R = 1/2; <span class="comment">% The Encoding Rate</span>
+        msgM = 2; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.BPSKModulator;
+        htDeMod = comm.BPSKDemodulator;
+        puncpat = -1; <span class="comment">% Rate 1/2 Default Rate; No puncture</span>
+        lSpec = <span class="string">'*r-'</span>;
+    <span class="keyword">case</span> 1
+        display = <span class="string">'QPSK Rate 1/2'</span>;
+        modType = <span class="string">'PSK'</span>;
+        R = 1/2; <span class="comment">% The Encoding Rate</span>
+        msgM = 4; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.QPSKModulator(<span class="string">'BitInput'</span>, true);
+        htDeMod = comm.QPSKDemodulator(<span class="string">'BitOutput'</span>, true);
+        puncpat = -1; <span class="comment">% Rate 1/2 Default Rate; No puncture</span>
+        lSpec = <span class="string">'*g-'</span>;
+    <span class="keyword">case</span> 2
+        display = <span class="string">'QPSK Rate 3/4'</span>;
+        modType = <span class="string">'PSK'</span>;
+        R = 3/4; <span class="comment">% The Encoding Rate</span>
+        msgM = 4; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.QPSKModulator(<span class="string">'BitInput'</span>, true);
+        htDeMod = comm.QPSKDemodulator(<span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; <span class="comment">% Rate 3/4  Figure 18-9</span>
+        lSpec = <span class="string">'xg-'</span>;
+    <span class="keyword">case</span> 3
+        display = <span class="string">'16-QAM Rate 1/2'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 1/2; <span class="comment">% The Encoding Rate</span>
+        msgM = 16; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = -1; <span class="comment">% Rate 1/2 Default Rate; No puncture</span>
+        lSpec = <span class="string">'*c-'</span>;
+    <span class="keyword">case</span> 4
+        display = <span class="string">'16-QAM Rate 3/4'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 3/4; <span class="comment">% The Encoding Rate</span>
+        msgM = 16; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; <span class="comment">% Rate 3/4  Figure 18-9</span>
+        lSpec = <span class="string">'xc-'</span>;
+    <span class="keyword">case</span> 5
+        display = <span class="string">'64-QAM Rate 2/3'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 2/3; <span class="comment">% The Encoding Rate</span>
+        msgM = 64; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0;]; <span class="comment">% Rate 2/3 Figure 18-9</span>
+        lSpec = <span class="string">'+b-'</span>;
+    <span class="keyword">case</span> 6
+        display = <span class="string">'64-QAM Rate 3/4'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 3/4; <span class="comment">% The Encoding Rate</span>
+        msgM = 64; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; <span class="comment">% Rate 3/4  Figure 18-9</span>
+        lSpec = <span class="string">'xb-'</span>;
+    <span class="keyword">case</span> 7
+        display = <span class="string">'64-QAM Rate 5/6'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 5/6; <span class="comment">% The Encoding Rate</span>
+        msgM = 64; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; <span class="comment">% Rate 5/6  Figure 20-11</span>
+        lSpec = <span class="string">'.b-'</span>;
+    <span class="keyword">case</span> 8
+        display = <span class="string">'256-QAM Rate 3/4'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 3/4; <span class="comment">% The Encoding Rate</span>
+        msgM = 256; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; <span class="comment">% Rate 3/4  Figure 18-9</span>
+        lSpec = <span class="string">'xm-'</span>;
+    <span class="keyword">case</span> 9
+        display = <span class="string">'256-QAM Rate 5/6'</span>;
+        modType = <span class="string">'QAM'</span>;
+        R = 5/6; <span class="comment">% The Encoding Rate</span>
+        msgM = 256; <span class="comment">% The M-ary number, 2 corresponds to binary modulation</span>
+        k = log2(msgM);   <span class="comment">% # of information bits per symbol</span>
+        hMod = comm.RectangularQAMModulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitInput'</span>, true); <span class="comment">% See 22.3.10.9</span>
+        htDeMod = comm.RectangularQAMDemodulator(<span class="string">'ModulationOrder'</span>, msgM, <span class="string">'BitOutput'</span>, true);
+        puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; <span class="comment">% Rate 5/6  Figure 20-11</span>
+        lSpec = <span class="string">'.m-'</span>;
+    <span class="keyword">otherwise</span>
+        warning(<span class="string">'Unexpected MCS.'</span>)
+<span class="keyword">end</span>
+
+<span class="comment">% Configuring enviroment</span>
+<span class="keyword">if</span> (debug == 0)
+    R = 1; <span class="comment">% No encoding</span>
+    N_Pre_Pad = 0;
+    N_Data_Bits = 1e4;
+    N_Post_Pad = 0;
+    N_Data_Bits = N_Data_Bits + k - mod(N_Data_Bits,k);
+    htErrorCalc = comm.ErrorRate; <span class="comment">% for debug no encoding</span>
+<span class="keyword">elseif</span> (strcmp(type,<span class="string">'BCC'</span>))
+    <span class="comment">% Convolutional Encoding Setup</span>
+    constlen=7;
+    codegen = [171 133];
+    trellis = poly2trellis(constlen, codegen); <span class="comment">% Industry standard 18.3.5.6</span>
+    htConvEnc = comm.ConvolutionalEncoder(trellis);
+    htVitDec = comm.ViterbiDecoder(trellis, <span class="string">'InputFormat'</span>, <span class="string">'Hard'</span>);
+    htVitDec.TracebackDepth = 96;
+    htErrorCalc = comm.ErrorRate(<span class="string">'ReceiveDelay'</span>, htVitDec.TracebackDepth);
+
+    <span class="keyword">if</span> (puncpat ~= -1)
+        htConvEnc.PuncturePatternSource = <span class="string">'Property'</span>;
+        htVitDec.PuncturePatternSource = <span class="string">'Property'</span>;
+        htConvEnc.PuncturePattern = puncpat;
+        htVitDec.PuncturePattern = puncpat;
+    <span class="keyword">end</span>
+
+    <span class="comment">% Math Setup for # of bits</span>
+    length_param = 4095;  <span class="comment">% 4095 is the max LENGTH parameter. See 18.2.2.2</span>
+    [numerator,denominator] = rat(R);
+    N_DBPS = k;
+    N_Scrambler_Init_Bits = 7;
+    N_Reserved_Service_Bits = 9;
+    N_Tail_bits = 6;
+    N_SYM = ceil((N_Scrambler_Init_Bits+N_Reserved_Service_Bits+<span class="keyword">...</span>
+        8*length_param + N_Tail_bits)/lcm(N_DBPS,length(puncpat)))*numerator; <span class="comment">% 18.3.5.4</span>
+    N_DATA = N_SYM * lcm(N_DBPS,length(puncpat));
+    N_PAD = N_DATA - (N_Scrambler_Init_Bits+N_Reserved_Service_Bits+<span class="keyword">...</span>
+        8 * length_param + N_Tail_bits);
+    N_Pre_Pad = N_Scrambler_Init_Bits+N_Reserved_Service_Bits;
+    N_Post_Pad = N_Tail_bits+N_PAD;
+    N_Data_Bits = N_DATA-N_Pre_Pad-N_Post_Pad;
+<span class="keyword">elseif</span> (strcmp(type,<span class="string">'LDPC'</span>))
+    <span class="comment">% LDPC matrix initialization</span>
+    H = LDPC(R);
+    htLDPCEnc = comm.LDPCEncoder(H);
+    htLDPCDec = comm.LDPCDecoder(H);
+    htErrorCalc = comm.ErrorRate;
+
+    <span class="comment">% Configure moderator to use average power</span>
+    <span class="keyword">if</span>(~((msgM == 2) || (msgM == 4))) <span class="comment">% NormalizationMethod doesn't exist for BPSK or QPSK</span>
+        hMod.NormalizationMethod = <span class="string">'Average power'</span>;
+        hMod.AveragePower = 1;
+    <span class="keyword">end</span>
+    code_block = 648 * R; <span class="comment">% Our LDPC matricies are defined for 648 * R fixed input</span>
+    N_Pre_Pad = 0;
+    N_Data_Bits = code_block;
+    N_Post_Pad = 0;
+<span class="keyword">end</span>
+
+<span class="comment">% Create a vector to store the BER computed during each iteration</span>
+BERVec = zeros(3,length(SNR_Vec)); <span class="comment">% Allocate memory to store results</span>
+env_c = length(SNR_Vec);
+
+tic;
+<span class="comment">% Run the simulation numIter amount of times</span>
+<span class="comment">% Note that using a parallel pool will not output graphs.</span>
+<span class="comment">% Graphs will be generated and can be saved using print</span>
+<span class="keyword">parfor</span> n=1:env_c
+  <span class="comment">%reset(hErrorCalc)</span>
+  <span class="comment">%reset(hConvEnc)</span>
+  <span class="comment">%reset(hVitDec)</span>
+
+  hChan = comm.AWGNChannel(<span class="string">'NoiseMethod'</span>,<span class="string">'Signal to noise ratio (SNR)'</span>, <span class="string">'SNR'</span>, SNR_Vec(n));
+
+  hErrorCalc =clone(htErrorCalc);
+  <span class="keyword">if</span> (debug == 0)
+    hDeMod = clone(htDeMod);
+  <span class="keyword">elseif</span> (strcmp(type,<span class="string">'BCC'</span>))
+    hDeMod = clone(htDeMod);
+    hConvEnc = clone(htConvEnc);
+    hVitDec = clone(htVitDec);
+  <span class="keyword">elseif</span> (strcmp(type,<span class="string">'LDPC'</span>))
+    hDeMod = clone(htDeMod);
+    hDeMod.DecisionMethod = <span class="string">'Approximate log-likelihood ratio'</span>;
+    hDeMod.Variance =  1/10^(hChan.SNR/10);
+    <span class="keyword">if</span>(~((msgM == 2) || (msgM == 4))) <span class="comment">% NormalizationMethod doesn't exist for BPSK or QPSK</span>
+        hDeMod.NormalizationMethod = <span class="string">'Average power'</span>;
+        hDeMod.AveragePower = 1;
+    <span class="keyword">end</span>
+    hLDPCEnc = clone(htLDPCEnc);
+    hLDPCDec = clone(htLDPCDec);
+  <span class="keyword">end</span>
+  <span class="keyword">for</span> i = 1:numIter
+    <span class="comment">% Generate binary frames of size specified by the frameLength variable</span>
+    bits = [zeros(N_Pre_Pad,1);logical(randi([0 1], N_Data_Bits,1));zeros(N_Post_Pad,1)];
+
+    <span class="comment">% Interleave the bits   % Not interleaving because parity bit math mess</span>
+    txdata = bits; <span class="comment">%randintrlv(bits,sum(double('Keenesus')));</span>
+
+    <span class="comment">% Encode the data</span>
+    <span class="keyword">if</span> (debug == 0)
+        encData = txdata; <span class="comment">% for debug no encoding</span>
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'BCC'</span>))
+        encData = step(hConvEnc, txdata); <span class="comment">% Conv Enc</span>
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'LDPC'</span>))
+        encData = step(hLDPCEnc, txdata); <span class="comment">% LDPC Enc</span>
+    <span class="keyword">end</span>
+
+    <span class="comment">% Modulate the encoded data</span>
+    modData = step(hMod, encData);
+
+    <span class="comment">% Pass the modulated signal through an AWGN channel</span>
+    <span class="keyword">if</span> (strcmp(modType,<span class="string">'PSK'</span>))
+        channelOutput = step(hChan, modData);
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'LDPC'</span>) &amp;&amp; debug)
+        channelOutput = step(hChan, modData);
+    <span class="keyword">elseif</span> (strcmp(modType,<span class="string">'QAM'</span>))
+        channelOutput = awgn(modData, SNR_Vec(n), <span class="string">'measured'</span>);
+    <span class="keyword">end</span>
+    <span class="comment">% Add AWGN, this accounts for 10*log10(R) modification and additional</span>
+    <span class="comment">% power to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding</span>
+
+    <span class="comment">% Demodulate the signal</span>
+    rxsyms = step(hDeMod, channelOutput);
+
+    <span class="comment">% Pass the demodulated channel outputs as input to the decoder</span>
+    <span class="keyword">if</span> (debug == 0)
+        decData = rxsyms; <span class="comment">% for debug no encoding</span>
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'BCC'</span>))
+        decData = step(hVitDec, rxsyms); <span class="comment">% Viterbi dec</span>
+    <span class="keyword">elseif</span> (strcmp(type,<span class="string">'LDPC'</span>))
+        decData = step(hLDPCDec, rxsyms); <span class="comment">% LDPC dec</span>
+    <span class="keyword">end</span>
+
+    <span class="comment">% Deinterleave the bits % Not interleaving because parity bit math mess</span>
+    data = decData; <span class="comment">%randdeintrlv(decData,sum(double('Keenesus')));</span>
+
+    <span class="comment">% Compute and accumulate errors</span>
+    BERVec(:,n) = step(hErrorCalc, bits, double(data));
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span> <span class="comment">% End iteration</span>
+toc;
+    <span class="comment">% Compute the theoretical BERs for this scenario</span>
+    <span class="keyword">if</span> (debug == 0) <span class="comment">% for encoding</span>
+        theo_disp = strsplit(display);
+        berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, <span class="string">'nondiff'</span>);
+        semilogy(SNR_Vec,berHypo,<span class="string">'k'</span>, <span class="string">'DisplayName'</span>, strcat(<span class="string">'Theoretical '</span>, char(theo_disp(1))));
+        hold <span class="string">on</span>
+    <span class="keyword">end</span>
+
+R_Vec(:,:,MCS+1) = BERVec;
+EbNo_Vec = SNR_Vec - 10*log10(k*R);
+semilogy(SNR_Vec, BERVec(1,:), lSpec, <span class="string">'DisplayName'</span>, display);
+hold <span class="string">on</span>
+waitbar(MCS/MCS_Vec(length(MCS_Vec)),h,sprintf(<span class="string">'Evaluating MCS %d'</span>,MCS));
+<span class="keyword">end</span>
+close(h);
+</pre><a name="5"></a><h2>Graph Labeling</h2><pre class="codeinput">hold <span class="string">off</span>
+xlabel(<span class="string">'SNR (dB)'</span>);
+ylabel(<span class="string">'Bit Error Rate (BER)'</span>);
+<span class="keyword">if</span> (debug ~= 0) <span class="comment">% for encoding</span>
+    title(strcat(<span class="string">'802.11ac'</span>, type));
+<span class="keyword">else</span>
+    title(strcat(<span class="string">'802.11ac AWGN BER w/o FEC'</span>));
+    axis([0 20 1e-7 1e0]);
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> (debug ~= 0) <span class="comment">% for encoding</span>
+legend(<span class="string">'BPSK Rate 1/2 (MCS 0)'</span>, <span class="keyword">...</span>
+    <span class="string">'QPSK Rate 1/2 (MCS 1)'</span>, <span class="string">'QPSK Rate 3/4 (MCS 2)'</span>, <span class="keyword">...</span>
+    <span class="string">'16-QAM Rate 1/2 (MCS 3)'</span>, <span class="string">'16-QAM Rate 3/4 (MCS 4)'</span>, <span class="keyword">...</span>
+    <span class="string">'64-QAM Rate 2/3 (MCS 5)'</span>, <span class="string">'64-QAM Rate 3/4 (MCS 6)'</span>, <span class="string">'64-QAM Rate 5/6 (MCS 7)'</span>, <span class="keyword">...</span>
+    <span class="string">'256-QAM Rate 3/4 (MCS 8)'</span>, <span class="string">'256-QAM Rate 5/6 (MCS 9)'</span>);
+<span class="keyword">else</span>
+<span class="keyword">end</span>
+
+<span class="comment">%filename = sprintf('%s.csv',type);</span>
+<span class="comment">%xlswrite(filename,R_Vec,'ErrorStats');</span>
+</pre><a name="6"></a><h2>Data Output</h2>
+<img vspace="5" hspace="5" src="./assets/Debug.png" alt=""> <img vspace="5" hspace="5" src="./assets/BCC.png" alt=""> <img vspace="5" hspace="5" src="./assets/LDPC.png" alt="">
+<a name="7"></a><h2>Sample BCC Output</h2><pre class="codeoutput">
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_01.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_02.png" alt=""> <pre class="codeoutput"> Elapsed time is 402.094494 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_03.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_04.png" alt=""> <pre class="codeoutput">Elapsed time is 359.850479 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_05.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_06.png" alt=""> <pre class="codeoutput">Elapsed time is 1082.955355 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_07.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_08.png" alt=""> <pre class="codeoutput">Elapsed time is 347.156270 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_09.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_10.png" alt=""> <pre class="codeoutput">Elapsed time is 1008.327777 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_11.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_12.png" alt=""> <pre class="codeoutput">Elapsed time is 670.677639 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_13.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_14.png" alt=""> <pre class="codeoutput">Elapsed time is 981.606436 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_15.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_16.png" alt=""> <pre class="codeoutput">Elapsed time is 1695.898423 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_17.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_18.png" alt=""> <pre class="codeoutput">Elapsed time is 1028.833423 seconds.
+</pre><img vspace="5" hspace="5" src="./assets/WiLink_19.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_20.png" alt=""> <pre class="codeoutput">Elapsed time is 1706.740979 seconds.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% BER simulation of VHT SU 802.11 ac 
+% Derived from a skeleton BER script for a wireless link simulation encased in human
+%function [ber] = WirelessLinkSimulation(MCS)
+clear all;close all;clc;format compact; 
+% warnings that occur when running remotely
+warning('off','MATLAB:xlswrite:AddSheet');
+warning('off','MATLAB:xlswrite:NoCOMServer');
+warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
+
+%% Inputs
+type = 'BCC'; % ['BCC' 'LDPC'];
+
+%% Preset Generation 
+MCS_Vec = 0:9;
+SNR_Vec = 0:20; % in dB
+debug = -1; % If 0, running without encoding
+    if (debug == 0)
+        numIter = 1e3;
+    elseif (strcmp(type,'BCC'))
+        numIter = 1e3;
+    elseif (strcmp(type,'LDPC'))
+        numIter = 1e4;
+    end
+
+%% Simulate for all MCS
+R_Vec = zeros(3,length(SNR_Vec),length(MCS_Vec)); % Allocate memory to store results
+
+%waitbars are invalid in parallel pools.
+h = waitbar(0, 'Initializing data cannon...');
+for MCS = MCS_Vec
+% Choosing which Modulation and Coding Scheme
+switch MCS
+    case 0 
+        display = 'BPSK Rate 1/2';
+        modType = 'PSK';
+        R = 1/2; % The Encoding Rate
+        msgM = 2; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.BPSKModulator;
+        htDeMod = comm.BPSKDemodulator;
+        puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*r-';
+    case 1 
+        display = 'QPSK Rate 1/2';
+        modType = 'PSK';
+        R = 1/2; % The Encoding Rate
+        msgM = 4; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.QPSKModulator('BitInput', true);
+        htDeMod = comm.QPSKDemodulator('BitOutput', true);
+        puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*g-';
+    case 2
+        display = 'QPSK Rate 3/4';
+        modType = 'PSK';
+        R = 3/4; % The Encoding Rate
+        msgM = 4; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.QPSKModulator('BitInput', true);
+        htDeMod = comm.QPSKDemodulator('BitOutput', true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xg-';
+    case 3 
+        display = '16-QAM Rate 1/2';
+        modType = 'QAM';
+        R = 1/2; % The Encoding Rate
+        msgM = 16; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*c-';
+    case 4 
+        display = '16-QAM Rate 3/4';
+        modType = 'QAM';
+        R = 3/4; % The Encoding Rate
+        msgM = 16; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xc-';
+    case 5
+        display = '64-QAM Rate 2/3';
+        modType = 'QAM';
+        R = 2/3; % The Encoding Rate
+        msgM = 64; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
+        lSpec = '+b-';
+    case 6
+        display = '64-QAM Rate 3/4';
+        modType = 'QAM';
+        R = 3/4; % The Encoding Rate
+        msgM = 64; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xb-';
+    case 7
+        display = '64-QAM Rate 5/6';
+        modType = 'QAM';
+        R = 5/6; % The Encoding Rate
+        msgM = 64; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
+        lSpec = '.b-';
+    case 8
+        display = '256-QAM Rate 3/4';
+        modType = 'QAM';
+        R = 3/4; % The Encoding Rate
+        msgM = 256; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xm-';
+    case 9
+        display = '256-QAM Rate 5/6';
+        modType = 'QAM';
+        R = 5/6; % The Encoding Rate
+        msgM = 256; % The M-ary number, 2 corresponds to binary modulation
+        k = log2(msgM);   % # of information bits per symbol
+        hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
+        htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
+        puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
+        lSpec = '.m-';
+    otherwise 
+        warning('Unexpected MCS.')
+end
+
+% Configuring enviroment
+if (debug == 0)
+    R = 1; % No encoding
+    N_Pre_Pad = 0;
+    N_Data_Bits = 1e4;
+    N_Post_Pad = 0;
+    N_Data_Bits = N_Data_Bits + k - mod(N_Data_Bits,k);
+    htErrorCalc = comm.ErrorRate; % for debug no encoding
+elseif (strcmp(type,'BCC'))
+    % Convolutional Encoding Setup
+    constlen=7;
+    codegen = [171 133]; 
+    trellis = poly2trellis(constlen, codegen); % Industry standard 18.3.5.6
+    htConvEnc = comm.ConvolutionalEncoder(trellis); 
+    htVitDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Hard'); 
+    htVitDec.TracebackDepth = 96;
+    htErrorCalc = comm.ErrorRate('ReceiveDelay', htVitDec.TracebackDepth);
+
+    if (puncpat ~= -1) 
+        htConvEnc.PuncturePatternSource = 'Property';
+        htVitDec.PuncturePatternSource = 'Property';
+        htConvEnc.PuncturePattern = puncpat;
+        htVitDec.PuncturePattern = puncpat;
+    end
+    
+    % Math Setup for # of bits
+    length_param = 4095;  % 4095 is the max LENGTH parameter. See 18.2.2.2
+    [numerator,denominator] = rat(R);
+    N_DBPS = k;
+    N_Scrambler_Init_Bits = 7;
+    N_Reserved_Service_Bits = 9;
+    N_Tail_bits = 6;
+    N_SYM = ceil((N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
+        8*length_param + N_Tail_bits)/lcm(N_DBPS,length(puncpat)))*numerator; % 18.3.5.4
+    N_DATA = N_SYM * lcm(N_DBPS,length(puncpat));
+    N_PAD = N_DATA - (N_Scrambler_Init_Bits+N_Reserved_Service_Bits+...
+        8 * length_param + N_Tail_bits);
+    N_Pre_Pad = N_Scrambler_Init_Bits+N_Reserved_Service_Bits;
+    N_Post_Pad = N_Tail_bits+N_PAD;
+    N_Data_Bits = N_DATA-N_Pre_Pad-N_Post_Pad;
+elseif (strcmp(type,'LDPC'))
+    % LDPC matrix initialization
+    H = LDPC(R);
+    htLDPCEnc = comm.LDPCEncoder(H);
+    htLDPCDec = comm.LDPCDecoder(H);
+    htErrorCalc = comm.ErrorRate;
+    
+    % Configure moderator to use average power
+    if(~((msgM == 2) || (msgM == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+        hMod.NormalizationMethod = 'Average power';
+        hMod.AveragePower = 1;
+    end
+    code_block = 648 * R; % Our LDPC matricies are defined for 648 * R fixed input
+    N_Pre_Pad = 0;
+    N_Data_Bits = code_block;
+    N_Post_Pad = 0;
+end
+
+% Create a vector to store the BER computed during each iteration
+BERVec = zeros(3,length(SNR_Vec)); % Allocate memory to store results
+env_c = length(SNR_Vec);
+
+tic;
+% Run the simulation numIter amount of times
+% Note that using a parallel pool will not output graphs. 
+% Graphs will be generated and can be saved using print
+parfor n=1:env_c
+  %reset(hErrorCalc)
+  %reset(hConvEnc)
+  %reset(hVitDec)
+  
+  hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
+  
+  hErrorCalc =clone(htErrorCalc);
+  if (debug == 0)
+    hDeMod = clone(htDeMod);
+  elseif (strcmp(type,'BCC'))
+    hDeMod = clone(htDeMod);
+    hConvEnc = clone(htConvEnc);
+    hVitDec = clone(htVitDec);
+  elseif (strcmp(type,'LDPC'))
+    hDeMod = clone(htDeMod);
+    hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
+    hDeMod.Variance =  1/10^(hChan.SNR/10);
+    if(~((msgM == 2) || (msgM == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+        hDeMod.NormalizationMethod = 'Average power';
+        hDeMod.AveragePower = 1;
+    end
+    hLDPCEnc = clone(htLDPCEnc);
+    hLDPCDec = clone(htLDPCDec);
+  end
+  for i = 1:numIter
+    % Generate binary frames of size specified by the frameLength variable
+    bits = [zeros(N_Pre_Pad,1);logical(randi([0 1], N_Data_Bits,1));zeros(N_Post_Pad,1)];
+
+    % Interleave the bits   % Not interleaving because parity bit math mess
+    txdata = bits; %randintrlv(bits,sum(double('Keenesus'))); 
+
+    % Encode the data
+    if (debug == 0)
+        encData = txdata; % for debug no encoding
+    elseif (strcmp(type,'BCC'))
+        encData = step(hConvEnc, txdata); % Conv Enc
+    elseif (strcmp(type,'LDPC'))
+        encData = step(hLDPCEnc, txdata); % LDPC Enc
+    end
+    
+    % Modulate the encoded data
+    modData = step(hMod, encData);
+    
+    % Pass the modulated signal through an AWGN channel
+    if (strcmp(modType,'PSK'))
+        channelOutput = step(hChan, modData);
+    elseif (strcmp(type,'LDPC') && debug)
+        channelOutput = step(hChan, modData);
+    elseif (strcmp(modType,'QAM'))
+        channelOutput = awgn(modData, SNR_Vec(n), 'measured'); 
+    end
+    % Add AWGN, this accounts for 10*log10(R) modification and additional
+    % power to the modulation rate. http://www.mathworks.com/examples/matlab-communications/mw/comm-ex70334664-punctured-convolutional-coding
+    
+    % Demodulate the signal 
+    rxsyms = step(hDeMod, channelOutput);
+
+    % Pass the demodulated channel outputs as input to the decoder
+    if (debug == 0)
+        decData = rxsyms; % for debug no encoding
+    elseif (strcmp(type,'BCC'))
+        decData = step(hVitDec, rxsyms); % Viterbi dec
+    elseif (strcmp(type,'LDPC'))
+        decData = step(hLDPCDec, rxsyms); % LDPC dec
+    end
+    
+    % Deinterleave the bits % Not interleaving because parity bit math mess
+    data = decData; %randdeintrlv(decData,sum(double('Keenesus')));
+
+    % Compute and accumulate errors
+    BERVec(:,n) = step(hErrorCalc, bits, double(data));
+  end
+
+end % End iteration
+toc;
+    % Compute the theoretical BERs for this scenario
+    if (debug == 0) % for encoding
+        theo_disp = strsplit(display);
+        berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
+        semilogy(SNR_Vec,berHypo,'k', 'DisplayName', strcat('Theoretical ', char(theo_disp(1))));
+        hold on
+    end
+
+R_Vec(:,:,MCS+1) = BERVec;
+EbNo_Vec = SNR_Vec - 10*log10(k*R);
+semilogy(SNR_Vec, BERVec(1,:), lSpec, 'DisplayName', display);
+hold on
+waitbar(MCS/MCS_Vec(length(MCS_Vec)),h,sprintf('Evaluating MCS %d',MCS));
+end
+close(h);
+
+%% Graph Labeling
+hold off
+xlabel('SNR (dB)');
+ylabel('Bit Error Rate (BER)');
+if (debug ~= 0) % for encoding
+    title(strcat('802.11ac', type));
+else
+    title(strcat('802.11ac AWGN BER w/o FEC'));
+    axis([0 20 1e-7 1e0]);
+end
+
+if (debug ~= 0) % for encoding
+legend('BPSK Rate 1/2 (MCS 0)', ...
+    'QPSK Rate 1/2 (MCS 1)', 'QPSK Rate 3/4 (MCS 2)', ...
+    '16-QAM Rate 1/2 (MCS 3)', '16-QAM Rate 3/4 (MCS 4)', ...
+    '64-QAM Rate 2/3 (MCS 5)', '64-QAM Rate 3/4 (MCS 6)', '64-QAM Rate 5/6 (MCS 7)', ...
+    '256-QAM Rate 3/4 (MCS 8)', '256-QAM Rate 5/6 (MCS 9)');
+else 
+end
+
+%filename = sprintf('%s.csv',type);
+%xlswrite(filename,R_Vec,'ErrorStats');
+##### SOURCE END #####
+--></body></html>
