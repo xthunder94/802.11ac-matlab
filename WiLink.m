@@ -165,8 +165,10 @@ elseif (strcmp(type,'LDPC'))
     htErrorCalc = comm.ErrorRate;
     
     % Configure moderator to use average power
-    hMod.NormalizationMethod = 'Average power';
-    hMod.AveragePower = 1;
+    if MCS ~= 0
+        hMod.NormalizationMethod = 'Average power';
+        hMod.AveragePower = 1;
+    end
     
     code_block = 648 * R; % Our LDPC matricies are defined for 648 * R fixed input
     N_Pre_Pad = 0;
@@ -203,8 +205,10 @@ parfor n=1:env_c
     hDeMod = clone(htDeMod);
     hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
     hDeMod.Variance =  1/10^(hChan.SNR/10);
-    hDeMod.NormalizationMethod = 'Average power';
-    hDeMod.AveragePower = 1;
+    if MCS ~= 0
+        hDeMod.NormalizationMethod = 'Average power';
+        hDeMod.AveragePower = 1;
+    end
     hLDPCEnc = clone(htLDPCEnc);
     hLDPCDec = clone(htLDPCDec);
   end
