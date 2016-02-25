@@ -1,3 +1,6 @@
+% Helper function that selects encoding method (BCC, LDPC, or no encoding)
+% based on inputs and set parameters accordingly
+
 function [htEnc, htDec, htErrorCalc, ...
     N_Pre_Pad, N_Data_Bits, N_Post_Pad] = SetEncoder(encType, debug, k, R, k_TCB, puncpat)
 
