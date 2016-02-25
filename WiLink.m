@@ -8,7 +8,7 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-type = 'BCC'; % ['BCC' 'LDPC'];
+type = 'LDPC'; % ['BCC' 'LDPC'];
 
 %% Preset Generation 
 MCS_Vec = 0:9;
