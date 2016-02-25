@@ -8,12 +8,12 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-type = 'BCC'; % ['BCC' 'LDPC'];
+type = 'LDPC'; % ['BCC' 'LDPC'];
 
 %% Preset Generation 
 MCS_Vec = 0:9;
-SNR_Vec = 0:16; % in dB
-debug = 1; % If 0, running without encoding
+SNR_Vec = 0:20; % in dB
+debug = -1; % If 0, running without encoding
     if (debug == 0)
         numIter = 1e2;
     elseif (strcmp(type,'BCC'))
@@ -25,6 +25,8 @@ debug = 1; % If 0, running without encoding
 %% Simulate for all MCS
 R_Vec = zeros(3,length(SNR_Vec),length(MCS_Vec)); % Allocate memory to store results
 
+%waitbars are invalid in parallel pools.
+h = waitbar(0, 'Initializing data cannon...');
 for MCS = MCS_Vec
 %% Choosing which Modulation and Coding Scheme
 switch MCS
@@ -47,7 +49,7 @@ switch MCS
         hMod = comm.QPSKModulator('BitInput', true);
         htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
-        lSpec = '*y-';
+        lSpec = '*g-';
     case 2
         display = 'QPSK Rate 3/4';
         modType = 'PSK';
@@ -57,7 +59,7 @@ switch MCS
         hMod = comm.QPSKModulator('BitInput', true);
         htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-        lSpec = 'xy-';
+        lSpec = 'xg-';
     case 3 
         display = '16-QAM Rate 1/2';
         modType = 'QAM';
@@ -67,7 +69,7 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
-        lSpec = '*g-';
+        lSpec = '*c-';
     case 4 
         display = '16-QAM Rate 3/4';
         modType = 'QAM';
@@ -77,7 +79,7 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
-        lSpec = 'xg-';
+        lSpec = 'xc-';
     case 5
         display = '64-QAM Rate 2/3';
         modType = 'QAM';
@@ -179,9 +181,10 @@ elseif (strcmp(type,'LDPC'))
     htErrorCalc = comm.ErrorRate;
     
     % Configure moderator to use average power
-    hMod.NormalizationMethod = 'Average power';
-    hMod.AveragePower = 1;
-    
+    if(~((msgM == 2) || (msgM == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+        hMod.NormalizationMethod = 'Average power';
+        hMod.AveragePower = 1;
+    end
     code_block = 648 * R; % Our LDPC matricies are defined for 648 * R fixed input
     N_Pre_Pad = 0;
     N_Data_Bits = code_block;
@@ -193,9 +196,6 @@ BERVec = zeros(3,length(SNR_Vec)); % Allocate memory to store results
 env_c = length(SNR_Vec);
 
 tic;
-%waitbars are invalid in parallel pools.
-%h = waitbar(0, 'Initializing data cannon...');
-
 % Run the simulation numIter amount of times
 % Note that using a parallel pool will not output graphs. 
 % Graphs will be generated and can be saved using print
@@ -217,8 +217,10 @@ parfor n=1:env_c
     hDeMod = clone(htDeMod);
     hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
     hDeMod.Variance =  1/10^(hChan.SNR/10);
-    hDeMod.NormalizationMethod = 'Average power';
-    hDeMod.AveragePower = 1;
+    if(~((msgM == 2) || (msgM == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
+        hDeMod.NormalizationMethod = 'Average power';
+        hDeMod.AveragePower = 1;
+    end
     hLDPCEnc = clone(htLDPCEnc);
     hLDPCDec = clone(htLDPCDec);
   end
@@ -270,17 +272,14 @@ parfor n=1:env_c
     % Compute and accumulate errors
     BERVec(:,n) = step(hErrorCalc, bits, double(data));
   end
-  
-  %waitbar(n/env_c,h,sprintf('Evaluating %d',EbNoEncoderOutput(n)))
+
 end % End iteration
 toc;
-%close(h);
-
     % Compute the theoretical BERs for this scenario
-    if (debug ~= 0) % for encoding
+    if (debug == 0) % for encoding
         theo_disp = strsplit(display);
         berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
-        semilogy(SNR_Vec,berHypo,'b', 'DisplayName', strcat('Theoretical ', theo_disp(1)));
+        semilogy(SNR_Vec,berHypo,'k', 'DisplayName', strcat('Theoretical ', char(theo_disp(1))));
         hold on
     end
 
@@ -288,12 +287,23 @@ R_Vec(:,:,1) = BERVec;
 EbNo_Vec = SNR_Vec - 10*log10(k*R);
 semilogy(SNR_Vec, BERVec(1,:), lSpec, 'DisplayName', display);
 hold on
+waitbar(MCS/MCS_Vec(length(MCS_Vec)),h,sprintf('Evaluating MCS %d',MCS));
 end
+close(h);
 
 hold off
-xlabel('EbNo (dB)');
+xlabel('SNR (dB)');
 ylabel('Bit Error Rate (BER)');
 title(strcat('802.11ac:', type));
+
+if (debug ~= 0) % for encoding
+legend('BPSK Rate 1/2 (MCS 0)', ...
+    'QPSK Rate 1/2 (MCS 1)', 'QPSK Rate 3/4 (MCS 2)', ...
+    '16-QAM Rate 1/2 (MCS 3)', '16-QAM Rate 3/4 (MCS 4)', ...
+    '64-QAM Rate 2/3 (MCS 5)', '64-QAM Rate 3/4 (MCS 6)', '64-QAM Rate 5/6 (MCS 7)', ...
+    '256-QAM Rate 3/4 (MCS 8)', '256-QAM Rate 5/6 (MCS 9)');
+else 
+end
 
 
 %{
