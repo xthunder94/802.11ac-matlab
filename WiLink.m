@@ -8,7 +8,7 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-type = 'LDPC'; % ['BCC' 'LDPC'];
+type = 'BCC'; % ['BCC' 'LDPC'];
 
 %% Preset Generation 
 MCS_Vec = 0:9;
@@ -29,7 +29,7 @@ for MCS = MCS_Vec
 %% Choosing which Modulation and Coding Scheme
 switch MCS
     case 0 
-        disp('BPSK Rate 1/2')
+        display = 'BPSK Rate 1/2';
         modType = 'PSK';
         R = 1/2; % The Encoding Rate
         msgM = 2; % The M-ary number, 2 corresponds to binary modulation
@@ -37,9 +37,9 @@ switch MCS
         hMod = comm.BPSKModulator;
         htDeMod = comm.BPSKDemodulator;
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
-        lSpec = 
+        lSpec = '*r-';
     case 1 
-        disp('QPSK Rate 1/2')
+        display = 'QPSK Rate 1/2';
         modType = 'PSK';
         R = 1/2; % The Encoding Rate
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
@@ -47,8 +47,9 @@ switch MCS
         hMod = comm.QPSKModulator('BitInput', true);
         htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*y-';
     case 2
-        disp('QPSK Rate 3/4')
+        display = 'QPSK Rate 3/4';
         modType = 'PSK';
         R = 3/4; % The Encoding Rate
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
@@ -56,8 +57,9 @@ switch MCS
         hMod = comm.QPSKModulator('BitInput', true);
         htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xy-';
     case 3 
-        disp('16-QAM Rate 1/2')
+        display = '16-QAM Rate 1/2';
         modType = 'QAM';
         R = 1/2; % The Encoding Rate
         msgM = 16; % The M-ary number, 2 corresponds to binary modulation
@@ -65,8 +67,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*g-';
     case 4 
-        disp('16-QAM Rate 3/4')
+        display = '16-QAM Rate 3/4';
         modType = 'QAM';
         R = 3/4; % The Encoding Rate
         msgM = 16; % The M-ary number, 2 corresponds to binary modulation
@@ -74,8 +77,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xg-';
     case 5
-        disp('64-QAM Rate 2/3')
+        display = '64-QAM Rate 2/3';
         modType = 'QAM';
         R = 2/3; % The Encoding Rate
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
@@ -83,8 +87,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
+        lSpec = '+b-';
     case 6
-        disp('64-QAM Rate 3/4')
+        display = '64-QAM Rate 3/4';
         modType = 'QAM';
         R = 3/4; % The Encoding Rate
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
@@ -92,8 +97,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xb-';
     case 7
-        disp('64-QAM Rate 5/6')
+        display = '64-QAM Rate 5/6';
         modType = 'QAM';
         R = 5/6; % The Encoding Rate
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
@@ -101,8 +107,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
+        lSpec = '.b-';
     case 8
-        disp('256-QAM Rate 3/4')
+        display = '256-QAM Rate 3/4';
         modType = 'QAM';
         R = 3/4; % The Encoding Rate
         msgM = 256; % The M-ary number, 2 corresponds to binary modulation
@@ -110,8 +117,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xm-';
     case 9
-        disp('256-QAM Rate 5/6')
+        display = '256-QAM Rate 5/6';
         modType = 'QAM';
         R = 5/6; % The Encoding Rate
         msgM = 256; % The M-ary number, 2 corresponds to binary modulation
@@ -119,6 +127,7 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
+        lSpec = '.m-';
     otherwise 
         warning('Unexpected MCS.')
 end
@@ -197,7 +206,7 @@ parfor n=1:env_c
   
   hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
   
-  hErrorCalc = htErrorCalc.clone;
+  hErrorCalc =clone(htErrorCalc);
   if (debug == 0)
     hDeMod = clone(htDeMod);
   elseif (strcmp(type,'BCC'))
@@ -267,30 +276,24 @@ end % End iteration
 toc;
 %close(h);
 
+    % Compute the theoretical BERs for this scenario
+    if (debug ~= 0) % for encoding
+        theo_disp = strsplit(display);
+        berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
+        semilogy(SNR_Vec,berHypo,'b', 'DisplayName', strcat('Theoretical ', theo_disp(1)));
+        hold on
+    end
+
 R_Vec(:,:,1) = BERVec;
 EbNo_Vec = SNR_Vec - 10*log10(k*R);
-semilogy(EbNo_Vec, BERVec(1,:), lSpec);
+semilogy(SNR_Vec, BERVec(1,:), lSpec, 'DisplayName', display);
+hold on
 end
 
-ber = BERVec(1,:)
-
-%% Compute the theoretical BER for this scenario
-figure
-    % Compute the theoretical BERs for this scenario
-
-    if (debug ~= 0) % for encoding
-        berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
-    else 
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
-    end
-semilogy(SNR_Vec,berHypo,'r')
-hold on
-semilogy(SNR_Vec,BERVec(1,:));
 hold off
-xlabel('SNR (dB)')
-legend('Theoretical BER', 'BER');
-title(strcat(num2str(msgM), ' ', modType));
-
+xlabel('EbNo (dB)');
+ylabel('Bit Error Rate (BER)');
+title(strcat('802.11ac:', type));
 
 
 %{
