@@ -71,7 +71,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
   </style>
   <script src="./assets/jq.js"></script><script src="./assets/c.js"></script>
-  </head><body><canvas id="canvas" width="auto" height="auto"></canvas><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Inputs</a></li><li><a href="#3">Preset Generation</a></li><li><a href="#4">Simulate for all MCS</a></li><li><a href="#5">Graph Labeling</a></li><li><a href="#6">Data Output</a></li><li><a href="#7">Sample BCC Output</a></li></ul></div><pre class="codeinput"><span class="comment">% BER simulation of VHT SU 802.11 ac</span>
+  </head><body><canvas id="canvas" width="auto" height="auto"></canvas><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Inputs</a></li><li><a href="#3">Preset Generation</a></li><li><a href="#4">Simulate for all MCS</a></li><li><a href="#5">Graph Labeling</a></li><li><a href="#6">LDPC Helper Functions</a></li><li><a href="#7">Data Output</a></li><li><a href="#8">Sample BCC Output</a></li></ul></div><pre class="codeinput"><span class="comment">% BER simulation of VHT SU 802.11 ac</span>
 <span class="comment">% Derived from a skeleton BER script for a wireless link simulation encased in human</span>
 <span class="comment">%function [ber] = WirelessLinkSimulation(MCS)</span>
 clear <span class="string">all</span>;close <span class="string">all</span>;clc;format <span class="string">compact</span>;
@@ -379,9 +379,66 @@ legend(<span class="string">'BPSK Rate 1/2 (MCS 0)'</span>, <span class="keyword
 
 <span class="comment">%filename = sprintf('%s.csv',type);</span>
 <span class="comment">%xlswrite(filename,R_Vec,'ErrorStats');</span>
-</pre><a name="6"></a><h2>Data Output</h2>
+</pre><a name="6"></a><h2>LDPC Helper Functions</h2>
+<pre class="codeinput"><span class="keyword">function</span> [H] = LDPC(r)
+    <span class="keyword">if</span> r == 1/2
+        H = [B(00) E     E     E     B(00) B(00) E     E     B(00) E     E     B(00) B(01) B(00) E     E     E     E     E     E     E     E     E     E    ; <span class="keyword">...</span>
+             B(22) B(00) E     E     B(17) E     B(00) B(00) B(12) E     E     E     E     B(00) B(00) E     E     E     E     E     E     E     E     E    ; <span class="keyword">...</span>
+             B(06) E     B(00) E     B(10) E     E     E     B(24) E     B(00) E     E     E     B(00) B(00) E     E     E     E     E     E     E     E    ; <span class="keyword">...</span>
+             B(02) E     E     B(00) B(20) E     E     E     B(25) B(00) E     E     E     E     E     B(00) B(00) E     E     E     E     E     E     E    ; <span class="keyword">...</span>
+             B(23) E     E     E     B(03) E     E     E     B(00) E     B(09) B(11) E     E     E     E     B(00) B(00) E     E     E     E     E     E    ; <span class="keyword">...</span>
+             B(24) E     B(23) B(01) B(17) E     B(03) E     B(10) E     E     E     E     E     E     E     E     B(00) B(00) E     E     E     E     E    ; <span class="keyword">...</span>
+             B(25) E     E     E     B(08) E     E     E     B(07) B(18) E     E     B(00) E     E     E     E     E     B(00) B(00) E     E     E     E    ; <span class="keyword">...</span>
+             B(13) B(24) E     E     B(00) E     B(08) E     B(06) E     E     E     E     E     E     E     E     E     E     B(00) B(00) E     E     E    ; <span class="keyword">...</span>
+             B(07) B(20) E     B(16) B(22) B(10) E     E     B(23) E     E     E     E     E     E     E     E     E     E     E     B(00) B(00) E     E    ; <span class="keyword">...</span>
+             B(11) E     E     E     B(19) E     E     E     B(13) E     B(03) B(17) E     E     E     E     E     E     E     E     E     B(00) B(00) E    ; <span class="keyword">...</span>
+             B(25) E     B(08) E     B(23) B(18) E     B(14) B(09) E     E     E     E     E     E     E     E     E     E     E     E     E     B(00) B(00); <span class="keyword">...</span>
+             B(03) E     E     E     B(16) E     E     B(02) B(25) B(05) E     E     B(01) E     E     E     E     E     E     E     E     E     E     B(00); <span class="keyword">...</span>
+        ];
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> r == 2/3
+        H = [B(39) B(31) B(22) B(43) E     B(40) B(04) E     B(11) E     E     B(50) E     E     E     B(06) B(01) B(00) E     E     E     E     E     E    ; <span class="keyword">...</span>
+             B(25) B(52) B(41) B(02) B(06) E     B(14) E     B(34) E     E     E     B(24) E     B(37) E     E     B(00) B(00) E     E     E     E     E    ; <span class="keyword">...</span>
+             B(43) B(31) B(29) B(00) B(21) E     B(28) E     E     B(02) E     E     B(07) E     B(17) E     E     E     B(00) B(00) E     E     E     E    ; <span class="keyword">...</span>
+             B(20) B(33) B(48) E     B(04) B(13) E     B(26) E     E     B(22) E     E     B(46) B(42) E     E     E     E     B(00) B(00) E     E     E    ; <span class="keyword">...</span>
+             B(45) B(07) B(18) B(51) B(12) B(25) E     E     E     B(50) E     E     B(05) E     E     E     B(00) E     E     E     B(00) B(00) E     E    ; <span class="keyword">...</span>
+             B(35) B(40) B(32) B(16) B(05) E     E     B(18) E     E     B(43) B(51) E     B(32) E     E     E     E     E     E     E     B(00) B(00) E    ; <span class="keyword">...</span>
+             B(09) B(24) B(13) B(22) B(28) E     E     B(37) E     E     B(25) E     E     B(52) E     B(13) E     E     E     E     E     E     B(00) B(00); <span class="keyword">...</span>
+             B(32) B(22) B(04) B(21) B(16) E     E     E     B(27) B(28) E     B(38) E     E     E     B(08) B(01) E     E     E     E     E     E     B(00); <span class="keyword">...</span>
+    	];
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> r == 3/4
+        H = [B(39) B(40) B(51) B(41) B(03) B(29) B(08) B(36) E     B(14) E     B(06) E     B(33) E     B(11) E     B(04) B(01) B(00) E     E     E     E    ; <span class="keyword">...</span>
+             B(48) B(21) B(47) B(09) B(48) B(35) B(51) E     B(38) E     B(28) E     B(34) E     B(50) E     B(50) E     E     B(00) B(00) E     E     E    ; <span class="keyword">...</span>
+             B(30) B(39) B(28) B(42) B(50) B(39) B(05) B(17) E     B(06) E     B(18) E     B(20) E     B(15) E     B(40) E     E     B(00) B(00) E     E    ; <span class="keyword">...</span>
+             B(29) B(00) B(01) B(43) B(36) B(30) B(47) E     B(49) E     B(47) E     B(03) E     B(35) E     B(34) E     B(00) E     E     B(00) B(00) E    ; <span class="keyword">...</span>
+             B(01) B(32) B(11) B(23) B(10) B(44) B(12) B(07) E     B(48) E     B(04) E     B(09) E     B(17) E     B(16) E     E     E     E     B(00) B(00); <span class="keyword">...</span>
+             B(13) B(07) B(15) B(47) B(23) B(16) B(47) E     B(43) E     B(29) E     B(52) E     B(02) E     B(53) E     B(01) E     E     E     E     B(00); <span class="keyword">...</span>
+    	];
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> r == 5/6
+        H = [B(48) B(29) B(37) B(52) B(02) B(16) B(06) B(14) B(53) B(31) B(34) B(05) B(18) B(42) B(53) B(31) B(45) E     B(46) B(52) B(01) B(00) E     E    ; <span class="keyword">...</span>
+             B(17) B(04) B(30) B(07) B(43) B(11) B(24) B(06) B(14) B(21) B(06) B(39) B(17) B(40) B(47) B(07) B(15) B(41) B(19) E     E     B(00) B(00) E    ; <span class="keyword">...</span>
+             B(07) B(02) B(51) B(31) B(46) B(23) B(16) B(11) B(53) B(40) B(10) B(07) B(46) B(53) B(33) B(35) E     B(25) B(35) B(38) B(00) E     B(00) B(00); <span class="keyword">...</span>
+             B(19) B(48) B(41) B(01) B(10) B(07) B(36) B(47) B(05) B(29) B(52) B(52) B(31) B(10) B(26) B(06) B(03) B(02) E     B(51) B(01) E     E     B(00); <span class="keyword">...</span>
+        ];
+    <span class="keyword">end</span>
+    H = sparse(H);
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> [C] = B(i)
+    <span class="comment">% Subblock Size Z=27</span>
+    C = circshift(eye(27), i, 2);
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> [C] = E()
+    <span class="comment">% Empty Subblock Z=27</span>
+    C = zeros(27);
+<span class="keyword">end</span>
+</pre>
+<a name="7"></a><h2>Data Output</h2>
 <img vspace="5" hspace="5" src="./assets/Debug.png" alt=""> <img vspace="5" hspace="5" src="./assets/BCC.png" alt=""> <img vspace="5" hspace="5" src="./assets/LDPC.png" alt="">
-<a name="7"></a><h2>Sample BCC Output</h2><pre class="codeoutput">
+<a name="8"></a><h2>Sample BCC Output</h2><pre class="codeoutput">
 </pre><img vspace="5" hspace="5" src="./assets/WiLink_01.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_02.png" alt=""> <pre class="codeoutput"> Elapsed time is 402.094494 seconds.
 </pre><img vspace="5" hspace="5" src="./assets/WiLink_03.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_04.png" alt=""> <pre class="codeoutput">Elapsed time is 359.850479 seconds.
 </pre><img vspace="5" hspace="5" src="./assets/WiLink_05.png" alt=""> <img vspace="5" hspace="5" src="./assets/WiLink_06.png" alt=""> <pre class="codeoutput">Elapsed time is 1082.955355 seconds.
@@ -710,5 +767,61 @@ end
 
 %filename = sprintf('%s.csv',type);
 %xlswrite(filename,R_Vec,'ErrorStats');
+
+function [H] = LDPC(r)
+    if r == 1/2
+        H = [B(00) E     E     E     B(00) B(00) E     E     B(00) E     E     B(00) B(01) B(00) E     E     E     E     E     E     E     E     E     E    ; ...
+             B(22) B(00) E     E     B(17) E     B(00) B(00) B(12) E     E     E     E     B(00) B(00) E     E     E     E     E     E     E     E     E    ; ...
+             B(06) E     B(00) E     B(10) E     E     E     B(24) E     B(00) E     E     E     B(00) B(00) E     E     E     E     E     E     E     E    ; ...
+             B(02) E     E     B(00) B(20) E     E     E     B(25) B(00) E     E     E     E     E     B(00) B(00) E     E     E     E     E     E     E    ; ...
+             B(23) E     E     E     B(03) E     E     E     B(00) E     B(09) B(11) E     E     E     E     B(00) B(00) E     E     E     E     E     E    ; ...
+             B(24) E     B(23) B(01) B(17) E     B(03) E     B(10) E     E     E     E     E     E     E     E     B(00) B(00) E     E     E     E     E    ; ...
+             B(25) E     E     E     B(08) E     E     E     B(07) B(18) E     E     B(00) E     E     E     E     E     B(00) B(00) E     E     E     E    ; ...
+             B(13) B(24) E     E     B(00) E     B(08) E     B(06) E     E     E     E     E     E     E     E     E     E     B(00) B(00) E     E     E    ; ...
+             B(07) B(20) E     B(16) B(22) B(10) E     E     B(23) E     E     E     E     E     E     E     E     E     E     E     B(00) B(00) E     E    ; ...
+             B(11) E     E     E     B(19) E     E     E     B(13) E     B(03) B(17) E     E     E     E     E     E     E     E     E     B(00) B(00) E    ; ...
+             B(25) E     B(08) E     B(23) B(18) E     B(14) B(09) E     E     E     E     E     E     E     E     E     E     E     E     E     B(00) B(00); ...
+             B(03) E     E     E     B(16) E     E     B(02) B(25) B(05) E     E     B(01) E     E     E     E     E     E     E     E     E     E     B(00); ...
+        ];
+    end
+    if r == 2/3
+        H = [B(39) B(31) B(22) B(43) E     B(40) B(04) E     B(11) E     E     B(50) E     E     E     B(06) B(01) B(00) E     E     E     E     E     E    ; ...
+             B(25) B(52) B(41) B(02) B(06) E     B(14) E     B(34) E     E     E     B(24) E     B(37) E     E     B(00) B(00) E     E     E     E     E    ; ...
+             B(43) B(31) B(29) B(00) B(21) E     B(28) E     E     B(02) E     E     B(07) E     B(17) E     E     E     B(00) B(00) E     E     E     E    ; ...
+             B(20) B(33) B(48) E     B(04) B(13) E     B(26) E     E     B(22) E     E     B(46) B(42) E     E     E     E     B(00) B(00) E     E     E    ; ...
+             B(45) B(07) B(18) B(51) B(12) B(25) E     E     E     B(50) E     E     B(05) E     E     E     B(00) E     E     E     B(00) B(00) E     E    ; ...
+             B(35) B(40) B(32) B(16) B(05) E     E     B(18) E     E     B(43) B(51) E     B(32) E     E     E     E     E     E     E     B(00) B(00) E    ; ...
+             B(09) B(24) B(13) B(22) B(28) E     E     B(37) E     E     B(25) E     E     B(52) E     B(13) E     E     E     E     E     E     B(00) B(00); ...
+             B(32) B(22) B(04) B(21) B(16) E     E     E     B(27) B(28) E     B(38) E     E     E     B(08) B(01) E     E     E     E     E     E     B(00); ...
+    	];
+    end
+    if r == 3/4
+        H = [B(39) B(40) B(51) B(41) B(03) B(29) B(08) B(36) E     B(14) E     B(06) E     B(33) E     B(11) E     B(04) B(01) B(00) E     E     E     E    ; ...
+             B(48) B(21) B(47) B(09) B(48) B(35) B(51) E     B(38) E     B(28) E     B(34) E     B(50) E     B(50) E     E     B(00) B(00) E     E     E    ; ...
+             B(30) B(39) B(28) B(42) B(50) B(39) B(05) B(17) E     B(06) E     B(18) E     B(20) E     B(15) E     B(40) E     E     B(00) B(00) E     E    ; ...
+             B(29) B(00) B(01) B(43) B(36) B(30) B(47) E     B(49) E     B(47) E     B(03) E     B(35) E     B(34) E     B(00) E     E     B(00) B(00) E    ; ...
+             B(01) B(32) B(11) B(23) B(10) B(44) B(12) B(07) E     B(48) E     B(04) E     B(09) E     B(17) E     B(16) E     E     E     E     B(00) B(00); ...
+             B(13) B(07) B(15) B(47) B(23) B(16) B(47) E     B(43) E     B(29) E     B(52) E     B(02) E     B(53) E     B(01) E     E     E     E     B(00); ...
+    	];
+    end
+    if r == 5/6
+        H = [B(48) B(29) B(37) B(52) B(02) B(16) B(06) B(14) B(53) B(31) B(34) B(05) B(18) B(42) B(53) B(31) B(45) E     B(46) B(52) B(01) B(00) E     E    ; ...
+             B(17) B(04) B(30) B(07) B(43) B(11) B(24) B(06) B(14) B(21) B(06) B(39) B(17) B(40) B(47) B(07) B(15) B(41) B(19) E     E     B(00) B(00) E    ; ...
+             B(07) B(02) B(51) B(31) B(46) B(23) B(16) B(11) B(53) B(40) B(10) B(07) B(46) B(53) B(33) B(35) E     B(25) B(35) B(38) B(00) E     B(00) B(00); ...
+             B(19) B(48) B(41) B(01) B(10) B(07) B(36) B(47) B(05) B(29) B(52) B(52) B(31) B(10) B(26) B(06) B(03) B(02) E     B(51) B(01) E     E     B(00); ...
+        ];
+    end
+    H = sparse(H);
+end
+
+function [C] = B(i)
+    % Subblock Size Z=27
+    C = circshift(eye(27), i, 2);
+end
+
+function [C] = E()
+    % Empty Subblock Z=27
+    C = zeros(27);
+end
 ##### SOURCE END #####
 --></body></html>
