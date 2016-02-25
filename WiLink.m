@@ -8,14 +8,12 @@ warning('off','MATLAB:xlswrite:NoCOMServer');
 warning('off','MATLAB:mir_warning_maybe_uninitialized_temporary');
 
 %% Inputs
-MCS = 0 % 0:9;
-type = 'LDPC'; % ['BCC' 'LDPC'];
-
-numIter = 1; 
-SNR_Vec = 0:16; % in dB
-debug = 1; % If 0, running without encoding
+type = 'BCC'; % ['BCC' 'LDPC'];
 
 %% Preset Generation 
+MCS_Vec = 0:9;
+SNR_Vec = 0:20; % in dB
+debug = -1; % If 0, running without encoding
     if (debug == 0)
         numIter = 1e2;
     elseif (strcmp(type,'BCC'))
@@ -23,10 +21,17 @@ debug = 1; % If 0, running without encoding
     elseif (strcmp(type,'LDPC'))
         numIter = 1e4;
     end
-%% Choosing which Modulation and Coding Scheme 
+
+%% Simulate for all MCS
+R_Vec = zeros(3,length(SNR_Vec),length(MCS_Vec)); % Allocate memory to store results
+
+%waitbars are invalid in parallel pools.
+h = waitbar(0, 'Initializing data cannon...');
+for MCS = MCS_Vec
+%% Choosing which Modulation and Coding Scheme
 switch MCS
     case 0 
-        disp('BPSK Rate 1/2')
+        display = 'BPSK Rate 1/2';
         modType = 'PSK';
         R = 1/2; % The Encoding Rate
         msgM = 2; % The M-ary number, 2 corresponds to binary modulation
@@ -34,8 +39,9 @@ switch MCS
         hMod = comm.BPSKModulator;
         htDeMod = comm.BPSKDemodulator;
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*r-';
     case 1 
-        disp('QPSK Rate 1/2')
+        display = 'QPSK Rate 1/2';
         modType = 'PSK';
         R = 1/2; % The Encoding Rate
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
@@ -43,8 +49,9 @@ switch MCS
         hMod = comm.QPSKModulator('BitInput', true);
         htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*g-';
     case 2
-        disp('QPSK Rate 3/4')
+        display = 'QPSK Rate 3/4';
         modType = 'PSK';
         R = 3/4; % The Encoding Rate
         msgM = 4; % The M-ary number, 2 corresponds to binary modulation
@@ -52,8 +59,9 @@ switch MCS
         hMod = comm.QPSKModulator('BitInput', true);
         htDeMod = comm.QPSKDemodulator('BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xg-';
     case 3 
-        disp('16-QAM Rate 1/2')
+        display = '16-QAM Rate 1/2';
         modType = 'QAM';
         R = 1/2; % The Encoding Rate
         msgM = 16; % The M-ary number, 2 corresponds to binary modulation
@@ -61,8 +69,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = -1; % Rate 1/2 Default Rate; No puncture 
+        lSpec = '*c-';
     case 4 
-        disp('16-QAM Rate 3/4')
+        display = '16-QAM Rate 3/4';
         modType = 'QAM';
         R = 3/4; % The Encoding Rate
         msgM = 16; % The M-ary number, 2 corresponds to binary modulation
@@ -70,8 +79,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xc-';
     case 5
-        disp('64-QAM Rate 2/3')
+        display = '64-QAM Rate 2/3';
         modType = 'QAM';
         R = 2/3; % The Encoding Rate
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
@@ -79,8 +89,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0;]; % Rate 2/3 Figure 18-9
+        lSpec = '+b-';
     case 6
-        disp('64-QAM Rate 3/4')
+        display = '64-QAM Rate 3/4';
         modType = 'QAM';
         R = 3/4; % The Encoding Rate
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
@@ -88,8 +99,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xb-';
     case 7
-        disp('64-QAM Rate 5/6')
+        display = '64-QAM Rate 5/6';
         modType = 'QAM';
         R = 5/6; % The Encoding Rate
         msgM = 64; % The M-ary number, 2 corresponds to binary modulation
@@ -97,8 +109,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
+        lSpec = '.b-';
     case 8
-        disp('256-QAM Rate 3/4')
+        display = '256-QAM Rate 3/4';
         modType = 'QAM';
         R = 3/4; % The Encoding Rate
         msgM = 256; % The M-ary number, 2 corresponds to binary modulation
@@ -106,8 +119,9 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1;]; % Rate 3/4  Figure 18-9
+        lSpec = 'xm-';
     case 9
-        disp('256-QAM Rate 5/6')
+        display = '256-QAM Rate 5/6';
         modType = 'QAM';
         R = 5/6; % The Encoding Rate
         msgM = 256; % The M-ary number, 2 corresponds to binary modulation
@@ -115,11 +129,13 @@ switch MCS
         hMod = comm.RectangularQAMModulator('ModulationOrder', msgM, 'BitInput', true); % See 22.3.10.9
         htDeMod = comm.RectangularQAMDemodulator('ModulationOrder', msgM, 'BitOutput', true);
         puncpat = [1; 1; 1; 0; 0; 1; 1; 0; 0; 1;]; % Rate 5/6  Figure 20-11
+        lSpec = '.m-';
     otherwise 
         warning('Unexpected MCS.')
 end
 
 if (debug == 0)
+    R = 1; % No encoding
     N_Pre_Pad = 0;
     N_Data_Bits = 1e4;
     N_Post_Pad = 0;
@@ -165,11 +181,10 @@ elseif (strcmp(type,'LDPC'))
     htErrorCalc = comm.ErrorRate;
     
     % Configure moderator to use average power
-    if MCS ~= 0
+    if(~((msgM == 2) || (msgM == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
         hMod.NormalizationMethod = 'Average power';
         hMod.AveragePower = 1;
     end
-    
     code_block = 648 * R; % Our LDPC matricies are defined for 648 * R fixed input
     N_Pre_Pad = 0;
     N_Data_Bits = code_block;
@@ -181,9 +196,6 @@ BERVec = zeros(3,length(SNR_Vec)); % Allocate memory to store results
 env_c = length(SNR_Vec);
 
 tic;
-%waitbars are invalid in parallel pools.
-%h = waitbar(0, 'Initializing data cannon...');
-
 % Run the simulation numIter amount of times
 % Note that using a parallel pool will not output graphs. 
 % Graphs will be generated and can be saved using print
@@ -194,7 +206,7 @@ parfor n=1:env_c
   
   hChan = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)', 'SNR', SNR_Vec(n));
   
-  hErrorCalc = htErrorCalc.clone;
+  hErrorCalc =clone(htErrorCalc);
   if (debug == 0)
     hDeMod = clone(htDeMod);
   elseif (strcmp(type,'BCC'))
@@ -205,7 +217,7 @@ parfor n=1:env_c
     hDeMod = clone(htDeMod);
     hDeMod.DecisionMethod = 'Approximate log-likelihood ratio';
     hDeMod.Variance =  1/10^(hChan.SNR/10);
-    if MCS ~= 0
+    if(~((msgM == 2) || (msgM == 4))) % NormalizationMethod doesn't exist for BPSK or QPSK
         hDeMod.NormalizationMethod = 'Average power';
         hDeMod.AveragePower = 1;
     end
@@ -260,42 +272,38 @@ parfor n=1:env_c
     % Compute and accumulate errors
     BERVec(:,n) = step(hErrorCalc, bits, double(data));
   end
-  
-  %waitbar(n/env_c,h,sprintf('Evaluating %d',EbNoEncoderOutput(n)))
+
 end % End iteration
 toc;
-%close(h);
-
-ber = BERVec(1,:)
-
-%% Compute the theoretical BER for this scenario
-figure
     % Compute the theoretical BERs for this scenario
-    if (debug ~= 0) % for encoding
+    if (debug == 0) % for encoding
+        theo_disp = strsplit(display);
         berHypo = berawgn(SNR_Vec - 10*log10(k*R), modType, msgM, 'nondiff');
-    else 
-        berHypo = berawgn(SNR_Vec - 10*log10(k), modType, msgM, 'nondiff');
+        semilogy(SNR_Vec,berHypo,'k', 'DisplayName', strcat('Theoretical ', char(theo_disp(1))));
+        hold on
     end
-semilogy(SNR_Vec,berHypo,'r')
-hold on
-semilogy(SNR_Vec,BERVec(1,:));
-hold off
-xlabel('SNR (dB)')
-legend('Theoretical BER', 'BER');
-title(strcat(num2str(msgM), ' ', modType));
 
-%{
-filename = sprintf('snr%d_ber%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
-xlswrite(filename,berVec,'berVec');
-filename = sprintf('snr%d_br%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
-xlswrite(filename,brVec,'brVec');
-filename = sprintf('snr%d_ew%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
-xlswrite(filename,ewVec,'ewVec');
-filename = sprintf('snr%d_eqchan%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
-xlswrite(filename,eqchan,'eqchan');
-filename = sprintf('snr%d_eqweights%dQAM%dfw%dbk%dk%.3fff%.2fis.csv',snr,QAM,nfwdweights,nfbkweights,Kappa,ff,is);
-xlswrite(filename,eqweights,'eqweights');
-%}
-%filename = sprintf('snr%d:%d_MCS%d_Type%s.csv',snr(1),snr(end),MCS,type);
-%xlswrite(filename,ber,'berVec');
-%endtime = datetime('now');
+R_Vec(:,:,1) = BERVec;
+EbNo_Vec = SNR_Vec - 10*log10(k*R);
+semilogy(SNR_Vec, BERVec(1,:), lSpec, 'DisplayName', display);
+hold on
+waitbar(MCS/MCS_Vec(length(MCS_Vec)),h,sprintf('Evaluating MCS %d',MCS));
+end
+close(h);
+
+hold off
+xlabel('SNR (dB)');
+ylabel('Bit Error Rate (BER)');
+title(strcat('802.11ac:', type));
+
+if (debug ~= 0) % for encoding
+legend('BPSK Rate 1/2 (MCS 0)', ...
+    'QPSK Rate 1/2 (MCS 1)', 'QPSK Rate 3/4 (MCS 2)', ...
+    '16-QAM Rate 1/2 (MCS 3)', '16-QAM Rate 3/4 (MCS 4)', ...
+    '64-QAM Rate 2/3 (MCS 5)', '64-QAM Rate 3/4 (MCS 6)', '64-QAM Rate 5/6 (MCS 7)', ...
+    '256-QAM Rate 3/4 (MCS 8)', '256-QAM Rate 5/6 (MCS 9)');
+else 
+end
+
+%filename = sprintf('%s.csv',type);
+%xlswrite(filename,R_Vec,'ErrorStats');
