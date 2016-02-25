@@ -77,3 +77,4 @@ function WLinkSim(MCS_in, SNR_Vec_in, encType_in, debug_in, numIter_in, h_in)
     waitbar(MCS/9,h,sprintf('Evaluating MCS %d',MCS));
 
 end
+
